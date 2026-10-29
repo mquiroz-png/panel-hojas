@@ -130,6 +130,38 @@ main{min-width:0;display:flex;flex-direction:column;height:100%}
 .stale span{flex:1}
 .stale .link{flex:none}
 
+/* Comparar y duplicados */
+#pane-cmp{overflow-y:auto}
+.form{flex:none;display:flex;flex-direction:column;gap:7px;padding:6px 7px 4px}
+.field label{display:block;font-weight:700;margin-bottom:2px}
+.inrow{display:flex;gap:3px}
+.inrow input{flex:1;min-width:0;height:22px;border:1px solid var(--line);border-radius:0;padding:0 4px;background:var(--bg)}
+.inrow .tb{border-color:var(--bar-line);background:var(--bar);flex:none}
+.hint{margin:-2px 0 0;color:var(--muted);font-size:11px;line-height:1.35}
+.opts{display:flex;flex-direction:column;gap:3px}
+.opts.inline{flex-direction:row;flex-wrap:wrap;gap:3px 14px}
+.opts .olabel{font-weight:700;width:100%}
+.opts label{display:flex;align-items:center;gap:5px}
+.opts input[type="checkbox"],.opts input[type="radio"]{margin:0;flex:none}
+.tol input{width:60px;height:20px;border:1px solid var(--line);border-radius:0;padding:0 4px;background:var(--bg)}
+.swatch{display:inline-block;width:10px;height:10px;border:1px solid;flex:none}
+.swatch.red{background:#FFC7CE;border-color:#9C0006}
+.swatch.green{background:#C6EFCE;border-color:#006100}
+.btn.run{height:27px;font-weight:700;margin-top:1px}
+.btn.run-red{border-color:#b3484f;background:linear-gradient(#ffe1e4,#ffc7ce);color:#5c0004}
+.btn.run-green{border-color:#4f8f4a;background:linear-gradient(#e2f5e2,#c6efce);color:#063d06}
+.btn.run:disabled{opacity:.6}
+#pane-cmp[data-mode="dup"] .only-diff,#pane-cmp[data-mode="diff"] .only-dup,#pane-cmp[data-how="any"] .only-pos{display:none}
+#cmpResult{flex:1 1 0;min-height:150px}
+.rhead{font-weight:700;font-size:13px}
+.rnote{color:var(--muted);font-size:11px;margin-top:7px;line-height:1.35}
+.dlist{display:flex;flex-direction:column;padding:3px 0 4px}
+.drow{display:flex;align-items:center;gap:6px;width:100%;min-height:19px;padding:1px 4px;border:1px solid transparent;background:none;text-align:left}
+.drow:hover{background:var(--hover);border-color:var(--hover-line)}
+.drow .ad{flex:none;min-width:46px;color:var(--muted)}
+.drow .v{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drow .ne{flex:none;color:#b3261e;font-weight:700}
+
 /* Menús, diálogos y avisos */
 .menu{position:fixed;z-index:50;min-width:190px;max-height:calc(100vh - 8px);overflow:auto;background:var(--bg);border:1px solid #979797;box-shadow:2px 3px 8px rgba(0,0,0,.22);padding:2px}
 .mi{display:flex;align-items:center;gap:6px;width:100%;height:22px;padding:0 12px 0 4px;border:1px solid transparent;background:none;text-align:left;white-space:nowrap}
@@ -188,6 +220,8 @@ main{min-width:0;display:flex;flex-direction:column;height:100%}
     <symbol id="i-minilock" viewBox="0 0 10 10"><path d="M3 4.5V3.2a2 2 0 0 1 4 0v1.3" fill="none" stroke="#8a6a1a" stroke-width="1.1"/><rect x="2" y="4.5" width="6" height="4.8" rx=".6" fill="#e2b33c"/></symbol>
     <symbol id="i-rail-sheets" viewBox="0 0 20 20"><rect x="5.5" y="2.5" width="12" height="10" fill="#fff" stroke="#6f7b88"/><rect x="2.5" y="6.5" width="12" height="10" fill="#fff" stroke="#6f7b88"/><rect x="3" y="7" width="11" height="2.2" fill="#3e8a34"/><path d="M3 12h11M3 14.5h11M7 9.2v7M10.5 9.2v7" stroke="#b9c2cc"/></symbol>
     <symbol id="i-rail-deps" viewBox="0 0 20 20"><path d="M5.5 5.5L14.5 9M5.5 5.5L8 15.5M14.5 9L8 15.5" stroke="#6f7b88" stroke-width="1.3"/><rect x="2.5" y="3" width="6" height="5" fill="#fff" stroke="#1f6fc5" stroke-width="1.3"/><rect x="11.5" y="6.5" width="6" height="5" fill="#fff" stroke="#3e8a34" stroke-width="1.3"/><rect x="5" y="13" width="6" height="5" fill="#fff" stroke="#c48a12" stroke-width="1.3"/></symbol>
+    <symbol id="i-rail-cmp" viewBox="0 0 20 20"><rect x="2.5" y="2.5" width="6.5" height="15" fill="#fff" stroke="#6f7b88"/><rect x="11" y="2.5" width="6.5" height="15" fill="#fff" stroke="#6f7b88"/><rect x="11.5" y="7.5" width="5.5" height="4.5" fill="#f3a0a7"/><rect x="3" y="12.5" width="5.5" height="4.5" fill="#9fd79a"/><path d="M3 7.5h5.5M3 12.5h5.5M11.5 7.5h5.5M11.5 12h5.5" stroke="#b9c2cc"/></symbol>
+    <symbol id="i-eraser" viewBox="0 0 16 16"><path d="M9.6 2.2l4.2 4.2-6.6 6.6H4.6L2.4 10.8z" fill="#f4bccb" stroke="#99475c"/><path d="M5.6 7.4l3.9 3.9" stroke="#99475c"/><path d="M8.5 14h6" style="stroke:var(--ico-ink)" stroke-width="1.2"/></symbol>
   </defs>
 </svg>
 
@@ -195,6 +229,7 @@ main{min-width:0;display:flex;flex-direction:column;height:100%}
   <nav class="rail" role="tablist" aria-label="Paneles">
     <button id="tab-sheets" role="tab" aria-selected="true" aria-controls="pane-sheets" title="Libro y hojas"><svg><use href="#i-rail-sheets"/></svg></button>
     <button id="tab-deps" role="tab" aria-selected="false" aria-controls="pane-deps" title="Dependencias entre hojas"><svg><use href="#i-rail-deps"/></svg></button>
+    <button id="tab-cmp" role="tab" aria-selected="false" aria-controls="pane-cmp" title="Comparar y buscar duplicados"><svg><use href="#i-rail-cmp"/></svg></button>
   </nav>
 
   <main>
@@ -251,6 +286,43 @@ main{min-width:0;display:flex;flex-direction:column;height:100%}
       <div class="detail" id="depDetail" aria-live="polite"></div>
       <div class="status" id="depStatus"></div>
     </section>
+
+    <!-- ===== Comparar y duplicados ===== -->
+    <section id="pane-cmp" class="pane" role="tabpanel" aria-labelledby="tab-cmp" data-mode="diff" data-how="pos" hidden>
+      <div class="title"><span>Comparar y duplicados</span></div>
+      <div class="bar" role="toolbar" aria-label="Herramienta">
+        <button class="tb text" data-cmpmode="diff" aria-pressed="true" title="Comparar dos columnas o filas"><span class="swatch red"></span>Diferencias</button>
+        <button class="tb text" data-cmpmode="dup" aria-pressed="false" title="Buscar valores repetidos"><span class="swatch green"></span>Duplicados</button>
+        <span class="spacer"></span>
+        <button class="tb" data-act="clearMenu" title="Quitar los colores puestos por el panel" aria-haspopup="menu"><svg><use href="#i-eraser"/></svg></button>
+        <button class="tb" data-act="help" title="Ayuda"><svg><use href="#i-help"/></svg></button>
+      </div>
+      <div class="form">
+        <div class="field only-diff"><label for="rngA">Rango 1</label><div class="inrow"><input id="rngA" type="text" placeholder="Ej.: B2:B200" spellcheck="false" autocomplete="off"><button class="tb text" data-pick="rngA" title="Usar lo seleccionado en Excel">Selección</button></div></div>
+        <div class="field only-diff"><label for="rngB">Rango 2</label><div class="inrow"><input id="rngB" type="text" placeholder="Ej.: HDPE!C2:C200" spellcheck="false" autocomplete="off"><button class="tb text" data-pick="rngB" title="Usar lo seleccionado en Excel">Selección</button></div></div>
+        <div class="field only-dup"><label for="rngD">Rango</label><div class="inrow"><input id="rngD" type="text" placeholder="Ej.: B2:B200" spellcheck="false" autocomplete="off"><button class="tb text" data-pick="rngD" title="Usar lo seleccionado en Excel">Selección</button></div></div>
+        <p class="hint only-diff">Puedes seleccionar las dos columnas a la vez (con Cmd si están separadas) y pulsar Selección en el Rango 1.</p>
+        <div class="opts only-diff" role="radiogroup" aria-label="Cómo comparar">
+          <span class="olabel">Cómo comparar</span>
+          <label><input type="radio" name="cmpHow" value="pos" checked> Celda por celda, en la misma posición</label>
+          <label><input type="radio" name="cmpHow" value="any"> Si el valor existe en el otro rango</label>
+        </div>
+        <div class="opts inline only-diff">
+          <span class="olabel">Pintar en rojo</span>
+          <label><input type="checkbox" id="paintA" checked> Rango 1</label>
+          <label><input type="checkbox" id="paintB" checked> Rango 2</label>
+        </div>
+        <div class="opts">
+          <span class="olabel">Opciones</span>
+          <label><input type="checkbox" id="optTrim" checked> Ignorar espacios sobrantes</label>
+          <label><input type="checkbox" id="optCase"> Distinguir mayúsculas y minúsculas</label>
+          <label class="tol only-diff only-pos">Tolerancia para números <input type="text" id="cmpTol" value="0" inputmode="decimal" aria-label="Tolerancia para números"></label>
+        </div>
+        <button class="btn run run-red" id="cmpRun" data-act="cmpRun">Marcar diferencias en rojo</button>
+      </div>
+      <div class="detail" id="cmpResult"><div class="empty">Elige dos columnas o filas y pulsa Marcar diferencias.</div></div>
+      <div class="status" id="cmpStatus"></div>
+    </section>
   </main>
 </div>
 
@@ -275,7 +347,7 @@ const TAB_COLORS = ['#C00000','#FF0000','#FFC000','#FFFF00','#92D050','#00B050',
 
 /* ---------- preferencias ---------- */
 const PREFS_KEY = 'abc.panelHojas.prefs.v1';
-const prefs = Object.assign({ sort: 'pos', showHidden: false, showColor: true, big: false }, (() => {
+const prefs = Object.assign({ sort: 'pos', showHidden: false, showColor: true, big: false, cmpMode: 'diff', how: 'pos', paintA: true, paintB: true, cs: false, trim: true, tol: '0' }, (() => {
   try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || {}; } catch (e) { return {}; }
 })());
 function savePrefs(){ try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (e) {} }
@@ -351,6 +423,71 @@ const ExcelApi = {
       }
     });
   },
+  async getSelectionAreas(){
+    const multi = this.supports('1.9');
+    return Excel.run(async ctx => {
+      let items;
+      if (multi){ const ra = ctx.workbook.getSelectedRanges(); ra.areas.load('items/address,items/rowCount,items/columnCount'); await ctx.sync(); items = ra.areas.items; }
+      else { const r = ctx.workbook.getSelectedRange(); r.load('address,rowCount,columnCount'); await ctx.sync(); items = [r]; }
+      const out = items.map(r => ({ address: r.address, rowCount: r.rowCount, columnCount: r.columnCount, split: null }));
+      if (items.length === 1){
+        const r = items[0]; let parts = null;
+        if (r.columnCount === 2 && r.rowCount > 1) parts = [r.getColumn(0), r.getColumn(1)];
+        else if (r.rowCount === 2 && r.columnCount > 1) parts = [r.getRow(0), r.getRow(1)];
+        if (parts){ parts.forEach(x => x.load('address')); await ctx.sync(); out[0].split = parts.map(x => x.address); }
+      }
+      return out;
+    });
+  },
+  async resolveRanges(texts){
+    return Excel.run(async ctx => {
+      const act = ctx.workbook.worksheets.getActiveWorksheet();
+      const its = texts.map(t => {
+        const p = parseAddr(t);
+        const ws = p.sheet ? ctx.workbook.worksheets.getItem(p.sheet) : act;
+        let rg = ws.getRange(p.cells);
+        if (isWhole(p.cells)) rg = rg.getIntersectionOrNullObject(ws.getUsedRange(true));
+        ws.load('name'); rg.load('rowIndex,columnIndex,rowCount,columnCount');
+        return { t, ws, rg };
+      });
+      await ctx.sync();
+      its.forEach(it => {
+        if (it.rg.isNullObject) throw new Error('El rango «' + it.t + '» no tiene datos.');
+        if (it.rg.rowCount * it.rg.columnCount > MAX_CELLS) throw new Error('El rango «' + it.t + '» es demasiado grande (máximo ' + fmt(MAX_CELLS) + ' celdas).');
+        it.rg.load('values');
+      });
+      await ctx.sync();
+      return its.map(it => ({ sheet: it.ws.name, rowIndex: it.rg.rowIndex, columnIndex: it.rg.columnIndex, rowCount: it.rg.rowCount, columnCount: it.rg.columnCount, values: it.rg.values }));
+    });
+  },
+  async readBlock(g, R, C){
+    return Excel.run(async ctx => {
+      const rg = ctx.workbook.worksheets.getItem(g.sheet).getRangeByIndexes(g.rowIndex, g.columnIndex, R, C);
+      rg.load('values'); await ctx.sync();
+      return Object.assign({}, g, { rowCount: R, columnCount: C, values: rg.values });
+    });
+  },
+  async addRule(g, formula, kind, colors){
+    return Excel.run(async ctx => {
+      const rg = ctx.workbook.worksheets.getItem(g.sheet).getRangeByIndexes(g.rowIndex, g.columnIndex, g.rowCount, g.columnCount);
+      await removePanelRules(ctx, rg, kind === 'dup' ? /ph_dup/ : /ph_cmp/);
+      const cf = rg.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+      cf.custom.rule.formula = formula;
+      cf.custom.format.fill.color = colors.fill;
+      cf.custom.format.font.color = colors.font;
+      await ctx.sync();
+    });
+  },
+  async clearRules(scope){
+    return Excel.run(async ctx => {
+      let sheets;
+      if (scope === 'book'){ const col = ctx.workbook.worksheets; col.load('items/name'); await ctx.sync(); sheets = col.items; }
+      else sheets = [ctx.workbook.worksheets.getActiveWorksheet()];
+      let n = 0;
+      for (const ws of sheets) n += await removePanelRules(ctx, ws.getRange(), /ph_(cmp|dup)/);
+      return n;
+    });
+  },
   async registerEvents(on){
     await Excel.run(async ctx => {
       const col = ctx.workbook.worksheets;
@@ -386,7 +523,7 @@ function makeMockApi(){
     ['CRISTIAN VASQUEZ DISTRIB', '#00FFFF', 117, ['INSTALACIÓN CAÑERÍAS']]
   ];
   const S = base.map((b, i) => ({ id: 'm' + i, name: b[0], position: i, visibility: 'Visible', tabColor: b[1], protected: false, _n: b[2], _deps: b[3] }));
-  let active = 'm0', seq = S.length;
+  let active = 'm0', seq = S.length, rules = 0;
   const on = {};
   const fire = (k, a) => setTimeout(() => on[k] && on[k](a || {}), 0);
   const get = id => { const s = S.find(x => x.id === id || lc(x.name) === lc(id)); if (!s) throw new Error('No se encontró la hoja.'); return s; };
@@ -416,8 +553,46 @@ function makeMockApi(){
       }
       await wait(); if (rows.length) onChunk(rows, 4, 0);
     },
+    async getSelectionAreas(){
+      return [
+        { address: "'INSTALACIÓN CAÑERÍAS'!E5:E24", rowCount: 20, columnCount: 1, split: null },
+        { address: 'HDPE!C5:C24', rowCount: 20, columnCount: 1, split: null }
+      ];
+    },
+    async resolveRanges(texts){
+      return texts.map(t => {
+        const p = parseAddr(t);
+        const sh = p.sheet ? get(p.sheet).name : S.find(x => x.id === active).name;
+        const g = mockGeom(p.cells); if (!g) throw new Error('El rango «' + t + '» no es válido en la vista previa.');
+        return Object.assign(g, { sheet: sh, values: mockGrid(sh, g.rowIndex, g.columnIndex, g.rowCount, g.columnCount) });
+      });
+    },
+    async readBlock(g, R, C){ return Object.assign({}, g, { rowCount: R, columnCount: C, values: mockGrid(g.sheet, g.rowIndex, g.columnIndex, R, C) }); },
+    async addRule(){ rules++; },
+    async clearRules(){ const n = rules; rules = 0; return n; },
     async registerEvents(h){ on.activated = h.activated; on.changed = h.changed; }
   };
+  function mockGeom(cells){
+    const m = /^([A-Z]{1,3})(\d+)(?::([A-Z]{1,3})(\d+))?$/i.exec(cells.replace(/\$/g, ''));
+    if (!m) return null;
+    const ci = x => x.toUpperCase().split('').reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1;
+    const c1 = ci(m[1]), r1 = +m[2] - 1, c2 = m[3] ? ci(m[3]) : c1, r2 = m[4] ? +m[4] - 1 : r1;
+    return { rowIndex: Math.min(r1, r2), columnIndex: Math.min(c1, c2), rowCount: Math.abs(r2 - r1) + 1, columnCount: Math.abs(c2 - c1) + 1 };
+  }
+  function mockGrid(sheet, r0, c0, R, C){
+    const base = [120.5, 98, 210, 75.25, 300, 64, 150, 98, 180.5, 45, 210, 132];
+    const out = [];
+    for (let i = 0; i < R; i++){
+      const row = []; const r = r0 + i;
+      for (let j = 0; j < C; j++){
+        let v = r > 60 ? '' : base[r % base.length];
+        if (v !== '' && lc(sheet) === 'hdpe' && r % 7 === 3) v = Math.round((v - 2.5) * 100) / 100;
+        row.push(v);
+      }
+      out.push(row);
+    }
+    return out;
+  }
 }
 
 /* ---------- avisos y diálogos ---------- */
@@ -433,6 +608,7 @@ function friendly(e){
   if (/ItemAlreadyExists/i.test(code)) return 'Ya existe una hoja con ese nombre.';
   if (/password|contraseña/i.test(msg)) return 'La hoja tiene contraseña. Desprotégela desde Revisar > Desproteger hoja.';
   if (/AccessDenied/i.test(code)) return 'Excel no permitió el cambio (libro o hoja protegidos).';
+  if (/ItemNotFound/i.test(code)) return 'No se encontró la hoja o el rango indicado.';
   return msg;
 }
 function showError(e){ console.error(e); toast(friendly(e), true); }
@@ -628,6 +804,7 @@ async function unhideAll(){
 async function toggleProtect(id){
   const s = sheetById(id); if (!s) return;
   const on = !s.protected;
+  if (on && !(await dialog({ title: 'Proteger hoja', body: 'Al proteger «' + s.name + '» no podrás escribir en sus celdas hasta desprotegerla. ¿Continuar?', ok: 'Proteger' }))) return;
   try { await state.api.setProtected(id, on); await reloadSheets(); toast(on ? 'Hoja protegida (sin contraseña).' : 'Hoja desprotegida.'); }
   catch (e) { showError(e); }
 }
@@ -718,7 +895,7 @@ function setSort(mode){ prefs.sort = (prefs.sort === mode && mode !== 'pos') ? '
 
 function helpDialog(){
   const body = h('div');
-  const p = h('p', null, 'Este panel lista las hojas del libro abierto y muestra qué hojas usan datos de otras.');
+  const p = h('p', null, 'Este panel lista las hojas del libro abierto, muestra qué hojas usan datos de otras y compara rangos.');
   const ul = h('ul');
   [
     'Clic en una hoja para ir a ella. Doble clic o F2 para cambiar su nombre.',
@@ -726,7 +903,10 @@ function helpDialog(){
     'Con el teclado: flechas para moverte en la lista e Intro para ir a la hoja.',
     'Marca Filtro y escribe parte del nombre; no importan las tildes ni mayúsculas.',
     'Si cambias colores de pestaña desde Excel, pulsa Actualizar para verlos aquí.',
-    'Dependencias lee las fórmulas de cada hoja. No detecta referencias armadas con INDIRECTO ni las que pasan por nombres definidos.'
+    'Dependencias lee las fórmulas de cada hoja. No detecta referencias armadas con INDIRECTO ni las que pasan por nombres definidos.',
+    'Comparar: elige dos columnas o filas y las celdas que no coinciden se pintan en rojo. Puedes comparar celda por celda o buscar cada valor en el otro rango.',
+    'Duplicados: pinta en verde los valores que se repiten dentro del rango.',
+    'Los colores son formato condicional: se actualizan solos y el borrador quita solo los que puso el panel, sin tocar tus otros formatos.'
   ].forEach(t => ul.append(h('li', null, t)));
   body.append(p, ul);
   dialog({ title: 'Ayuda del panel', body, ok: 'Entendido', cancel: null });
@@ -935,6 +1115,277 @@ function renderDepDetail(){
   if (e.ext.length) box.append(depGroup('Vínculos a otros libros', e.ext, s.name, null));
 }
 
+/* ---------- comparar y duplicados ---------- */
+const MAX_CELLS = 200000;
+const RED = { fill: '#FFC7CE', font: '#9C0006' };
+const GREEN = { fill: '#C6EFCE', font: '#006100' };
+
+function parseAddr(t){
+  t = String(t).trim();
+  const i = t.lastIndexOf('!');
+  if (i < 0) return { sheet: null, cells: t.replace(/\s+/g, '') };
+  let sh = t.slice(0, i).trim();
+  if (sh.length > 1 && sh[0] === "'" && sh[sh.length - 1] === "'") sh = sh.slice(1, -1).replace(/''/g, "'");
+  return { sheet: sh, cells: t.slice(i + 1).replace(/\s+/g, '') };
+}
+function isWhole(cells){ const c = cells.replace(/\$/g, ''); return /^[A-Z]{1,3}(:[A-Z]{1,3})?$/i.test(c) || /^\d+(:\d+)?$/.test(c); }
+
+async function removePanelRules(ctx, rg, re){
+  const cfs = rg.conditionalFormats; cfs.load('items/type'); await ctx.sync();
+  const cust = cfs.items.filter(c => c.type === 'Custom');
+  if (!cust.length) return 0;
+  cust.forEach(c => c.custom.rule.load('formula'));
+  await ctx.sync();
+  let n = 0;
+  cust.forEach(c => { if (re.test(c.custom.rule.formula || '')) { c.delete(); n++; } });
+  if (n) await ctx.sync();
+  return n;
+}
+
+/* Fórmulas del formato condicional. N("ph_…") vale 0 y sirve de marca para reconocer las reglas del panel. */
+const q = sheet => "'" + sheet.replace(/'/g, "''") + "'!";
+const relTL = g => colName(g.columnIndex) + (g.rowIndex + 1);
+const absRng = g => '$' + colName(g.columnIndex) + '$' + (g.rowIndex + 1) + ':$' + colName(g.columnIndex + g.columnCount - 1) + '$' + (g.rowIndex + g.rowCount);
+const refFrom = (host, target, ref) => (host.sheet === target.sheet ? '' : q(target.sheet)) + ref;
+const T = (x, o) => o.trim ? 'TRIM(' + x + ')' : '(' + x + '&"")';
+function fDiffPos(host, other, o){
+  const a = relTL(host), b = refFrom(host, other, relTL(other));
+  const txt = o.cs ? 'NOT(EXACT(' + T(a, o) + ',' + T(b, o) + '))' : T(a, o) + '<>' + T(b, o);
+  return '=AND(IF(AND(ISNUMBER(' + a + '),ISNUMBER(' + b + ')),ABS(' + a + '-' + b + ')>' + o.tol + ',' + txt + '),N("ph_cmp")=0)';
+}
+function fNotIn(host, other, o){
+  const a = relTL(host), R = refFrom(host, other, absRng(other));
+  const eq = o.cs ? 'EXACT(' + T(R, o) + ',' + T(a, o) + ')' : T(R, o) + '=' + T(a, o);
+  return '=AND(' + T(a, o) + '<>"",SUMPRODUCT(--(' + eq + '))=0,N("ph_cmp")=0)';
+}
+function fDup(g, o){
+  const a = relTL(g), R = absRng(g);
+  const eq = o.cs ? 'EXACT(' + T(R, o) + ',' + T(a, o) + ')' : T(R, o) + '=' + T(a, o);
+  return '=AND(' + T(a, o) + '<>"",SUMPRODUCT(--(' + eq + '))>1,N("ph_dup")=0)';
+}
+
+/* La misma comparación en JavaScript, para el resumen del panel. */
+const xlTrim = s => s.replace(/^ +| +$/g, '').replace(/ {2,}/g, ' ');
+function toText(v){
+  if (typeof v === 'number') return String(Number(v.toPrecision(15)));
+  if (typeof v === 'boolean') return v ? 'VERDADERO' : 'FALSO';
+  return v == null ? '' : String(v);
+}
+function keyOf(v, o){ let s = toText(v); if (o.trim) s = xlTrim(s); return o.cs ? s : s.toLocaleLowerCase('es'); }
+function differs(a, b, o){ if (typeof a === 'number' && typeof b === 'number') return Math.abs(a - b) > o.tol; return keyOf(a, o) !== keyOf(b, o); }
+const addrOf = (g, i, j) => cellAddr(g.rowIndex + i, g.columnIndex + j);
+const rangeLabel = g => g.sheet + '!' + absRng(g).replace(/\$/g, '');
+function dispVal(v){
+  if (v === '' || v == null) return '(vacía)';
+  if (typeof v === 'number') return v.toLocaleString('es-CL', { maximumFractionDigits: 6 });
+  if (typeof v === 'boolean') return v ? 'VERDADERO' : 'FALSO';
+  return String(v);
+}
+async function goCell(sheet, addr){ try { await state.api.goto(sheet, addr); } catch (e) { showError(e); } }
+
+function cmpOpts(){
+  const tol = Number(String($('#cmpTol').value || '0').trim().replace(',', '.'));
+  return {
+    how: ($('input[name="cmpHow"]:checked') || {}).value || 'pos',
+    paintA: $('#paintA').checked, paintB: $('#paintB').checked,
+    cs: $('#optCase').checked, trim: $('#optTrim').checked,
+    tol: isFinite(tol) && tol >= 0 ? tol : NaN
+  };
+}
+function saveCmpPrefs(){
+  const o = cmpOpts();
+  Object.assign(prefs, { how: o.how, paintA: o.paintA, paintB: o.paintB, cs: o.cs, trim: o.trim, tol: $('#cmpTol').value });
+  savePrefs();
+}
+function cmpError(e){
+  const code = e && (e.code || (e.debugInfo && e.debugInfo.code)) || '';
+  if (/InvalidArgument/i.test(code)) toast('Excel no aceptó el rango. Escríbelo como B2:B200 o HDPE!B2:B200.', true);
+  else showError(e);
+}
+
+const runLabel = () => state.cmpMode === 'dup' ? 'Marcar duplicados en verde' : 'Marcar diferencias en rojo';
+function setCmpBusy(on, label){ const b = $('#cmpRun'); b.disabled = on; b.textContent = on ? label : runLabel(); }
+
+function setCmpMode(m){
+  state.cmpMode = m;
+  const p = $('#pane-cmp'); p.dataset.mode = m;
+  $$('[data-cmpmode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cmpmode === m)));
+  const run = $('#cmpRun'); run.textContent = runLabel(); run.className = 'btn run ' + (m === 'dup' ? 'run-green' : 'run-red');
+  const box = $('#cmpResult'); box.textContent = '';
+  box.append(h('div', 'empty', m === 'dup' ? 'Elige un rango y pulsa Marcar duplicados.' : 'Elige dos columnas o filas y pulsa Marcar diferencias.'));
+  prefs.cmpMode = m; savePrefs();
+}
+
+async function pickSelection(field){
+  try {
+    const areas = await state.api.getSelectionAreas();
+    if (!areas.length) return;
+    if (field === 'rngA' && areas.length >= 2){
+      $('#rngA').value = areas[0].address; $('#rngB').value = areas[1].address;
+      toast('Se tomaron los dos rangos seleccionados.');
+    } else if (field === 'rngA' && areas[0].split){
+      $('#rngA').value = areas[0].split[0]; $('#rngB').value = areas[0].split[1];
+      toast(areas[0].columnCount === 2 ? 'Se tomaron las dos columnas de la selección.' : 'Se tomaron las dos filas de la selección.');
+    } else {
+      $('#' + field).value = areas[0].address;
+    }
+  } catch (e) { showError(e); }
+}
+
+function rowBtn(sheet, addr, parts, title){
+  const b = h('button', 'drow'); if (title) b.title = title;
+  b.append(h('span', 'ad', addr)); parts.forEach(p => b.append(p));
+  b.onclick = () => goCell(sheet, addr);
+  return b;
+}
+function cellGroup(title, sheet, cells, open){
+  const d = h('details', 'dl');
+  const s = h('summary'); s.append(h('span', 'caret'), h('span', 'nm', title), h('span', 'cnt', fmt(cells.length)));
+  d.append(s);
+  const fill = () => {
+    const list = h('div', 'dlist');
+    if (!cells.length) list.append(h('div', 'none', 'Ninguno.'));
+    cells.slice(0, 200).forEach(c => list.append(rowBtn(sheet, c.addr, [h('span', 'v', dispVal(c.v))])));
+    if (cells.length > 200) list.append(h('div', 'rnote', 'Se muestran los primeros 200.'));
+    d.append(list);
+  };
+  if (open){ d.open = true; fill(); }
+  else d.addEventListener('toggle', () => { if (d.open && d.children.length === 1) fill(); });
+  return d;
+}
+
+async function runDiff(){
+  const ta = $('#rngA').value.trim(), tb = $('#rngB').value.trim();
+  if (!ta || !tb){ toast('Indica los dos rangos. Selecciónalos en Excel y pulsa Selección.', true); return; }
+  const o = cmpOpts();
+  if (isNaN(o.tol)){ toast('La tolerancia debe ser un número igual o mayor que 0.', true); return; }
+  if (!o.paintA && !o.paintB){ toast('Marca al menos un rango para pintar.', true); return; }
+  setCmpBusy(true, 'Comparando…');
+  try {
+    let [A, B] = await state.api.resolveRanges([ta, tb]);
+    const box = $('#cmpResult'); box.textContent = '';
+    if (o.how === 'pos'){
+      const cross = (A.columnCount === 1 && B.rowCount === 1 && A.rowCount > 1 && B.columnCount > 1) ||
+                    (A.rowCount === 1 && B.columnCount === 1 && A.columnCount > 1 && B.rowCount > 1);
+      if (cross) throw new Error('Un rango es una fila y el otro una columna. Compara dos columnas o dos filas.');
+      const R = Math.max(A.rowCount, B.rowCount), C = Math.max(A.columnCount, B.columnCount);
+      const resized = A.rowCount !== B.rowCount || A.columnCount !== B.columnCount;
+      if (A.rowCount !== R || A.columnCount !== C) A = await state.api.readBlock(A, R, C);
+      if (B.rowCount !== R || B.columnCount !== C) B = await state.api.readBlock(B, R, C);
+      const diffs = [];
+      for (let i = 0; i < R; i++) for (let j = 0; j < C; j++){
+        const a = A.values[i][j], b = B.values[i][j];
+        if (differs(a, b, o)) diffs.push({ aa: addrOf(A, i, j), ab: addrOf(B, i, j), a, b });
+      }
+      if (o.paintA) await state.api.addRule(A, fDiffPos(A, B, o), 'cmp', RED);
+      if (o.paintB) await state.api.addRule(B, fDiffPos(B, A, o), 'cmp', RED);
+      const unit = C === 1 ? ['fila', 'filas'] : R === 1 ? ['columna', 'columnas'] : ['celda', 'celdas'];
+      const total = C === 1 ? R : R === 1 ? C : R * C;
+      box.append(h('div', 'rhead', diffs.length ? plural(diffs.length, 'diferencia', 'diferencias') + ' en ' + plural(total, unit[0], unit[1]) : 'Sin diferencias: los dos rangos coinciden.'));
+      box.append(h('div', 'dmeta', rangeLabel(A) + ' contra ' + rangeLabel(B)));
+      if (resized) box.append(h('div', 'rnote', 'Los rangos tenían distinto tamaño; se comparó hasta el más grande.'));
+      const list = h('div', 'dlist');
+      diffs.slice(0, 200).forEach(d => {
+        const sheet = o.paintA ? A.sheet : B.sheet, addr = o.paintA ? d.aa : d.ab;
+        list.append(rowBtn(sheet, addr, [h('span', 'v', dispVal(d.a)), h('span', 'ne', '≠'), h('span', 'v', dispVal(d.b))],
+          d.aa + ': ' + dispVal(d.a) + '   ' + d.ab + ': ' + dispVal(d.b)));
+      });
+      box.append(list);
+      if (diffs.length > 200) box.append(h('div', 'rnote', 'Se muestran las primeras 200.'));
+    } else {
+      const keys = g => { const s = new Set(); g.values.forEach(r => r.forEach(v => { const k = keyOf(v, o); if (k !== '') s.add(k); })); return s; };
+      const missing = (g, set) => { const out = []; g.values.forEach((r, i) => r.forEach((v, j) => { const k = keyOf(v, o); if (k !== '' && !set.has(k)) out.push({ addr: addrOf(g, i, j), v }); })); return out; };
+      const missA = missing(A, keys(B)), missB = missing(B, keys(A));
+      if (o.paintA) await state.api.addRule(A, fNotIn(A, B, o), 'cmp', RED);
+      if (o.paintB) await state.api.addRule(B, fNotIn(B, A, o), 'cmp', RED);
+      const n = (o.paintA ? missA.length : 0) + (o.paintB ? missB.length : 0);
+      box.append(h('div', 'rhead', n ? plural(n, 'valor', 'valores') + ' sin pareja en el otro rango' : 'Todos los valores están en ambos rangos.'));
+      box.append(h('div', 'dmeta', rangeLabel(A) + ' y ' + rangeLabel(B)));
+      if (o.paintA) box.append(cellGroup('Del rango 1 que faltan en el 2', A.sheet, missA, missA.length <= 40));
+      if (o.paintB) box.append(cellGroup('Del rango 2 que faltan en el 1', B.sheet, missB, missB.length <= 40));
+    }
+    box.append(h('div', 'rnote', 'El color se actualiza solo si cambias los datos. Para quitarlo usa el borrador.'));
+    toast(state.demo ? 'Vista previa: en Excel estas celdas quedarían en rojo.' : 'Diferencias marcadas en rojo.');
+  } catch (e) { cmpError(e); }
+  finally { setCmpBusy(false); }
+}
+
+async function runDup(){
+  const t = $('#rngD').value.trim();
+  if (!t){ toast('Indica el rango. Selecciónalo en Excel y pulsa Selección.', true); return; }
+  const o = cmpOpts();
+  setCmpBusy(true, 'Buscando…');
+  try {
+    const [G] = await state.api.resolveRanges([t]);
+    const groups = new Map();
+    G.values.forEach((r, i) => r.forEach((v, j) => {
+      const k = keyOf(v, o); if (k === '') return;
+      let g = groups.get(k); if (!g) groups.set(k, g = { v, cells: [] });
+      g.cells.push({ addr: addrOf(G, i, j), v });
+    }));
+    const dups = Array.from(groups.values()).filter(g => g.cells.length > 1).sort((a, b) => b.cells.length - a.cells.length);
+    const nCells = dups.reduce((s, g) => s + g.cells.length, 0);
+    await state.api.addRule(G, fDup(G, o), 'dup', GREEN);
+    const box = $('#cmpResult'); box.textContent = '';
+    box.append(h('div', 'rhead', dups.length ? plural(dups.length, 'valor repetido', 'valores repetidos') + ' en ' + plural(nCells, 'celda', 'celdas') : 'No hay valores duplicados en el rango.'));
+    box.append(h('div', 'dmeta', rangeLabel(G)));
+    dups.slice(0, 200).forEach(g => {
+      const d = h('details', 'dl'); const s = h('summary');
+      s.append(h('span', 'caret'), h('span', 'nm', dispVal(g.v)), h('span', 'cnt', plural(g.cells.length, 'vez', 'veces')));
+      d.append(s);
+      d.addEventListener('toggle', () => {
+        if (!d.open || d.children.length > 1) return;
+        const chips = h('div', 'chips');
+        g.cells.slice(0, 150).forEach(c => { const b = h('button', 'chip', c.addr); b.onclick = () => goCell(G.sheet, c.addr); chips.append(b); });
+        if (g.cells.length > 150) chips.append(h('span', 'more', 'y ' + fmt(g.cells.length - 150) + ' más'));
+        d.append(chips);
+      });
+      box.append(d);
+    });
+    if (dups.length > 200) box.append(h('div', 'rnote', 'Se muestran los primeros 200 valores.'));
+    box.append(h('div', 'rnote', 'El color se actualiza solo si cambias los datos. Para quitarlo usa el borrador.'));
+    toast(state.demo ? 'Vista previa: en Excel estas celdas quedarían en verde.' : 'Duplicados marcados en verde.');
+  } catch (e) { cmpError(e); }
+  finally { setCmpBusy(false); }
+}
+
+function clearMenu(btn){
+  menuBelow(btn, [
+    { label: 'Quitar colores de la hoja activa', action: () => clearColors('sheet') },
+    { label: 'Quitar colores de todo el libro', action: () => clearColors('book') }
+  ]);
+}
+async function clearColors(scope){
+  try {
+    const n = await state.api.clearRules(scope);
+    toast(n ? 'Se quitaron ' + plural(n, 'regla de color', 'reglas de color') + '.' : 'No había colores del panel ' + (scope === 'book' ? 'en el libro.' : 'en esta hoja.'));
+  } catch (e) { showError(e); }
+}
+
+function renderCmpStatus(){
+  const st = $('#cmpStatus'); st.textContent = '';
+  if (state.demo) st.append(h('span', 'demo', 'Vista previa con datos de ejemplo. '));
+  st.append(document.createTextNode('Rojo: no coinciden. Verde: repetidos.'));
+}
+
+function bindCmp(){
+  $('#tab-cmp').onclick = () => showPane('cmp');
+  $('input[name="cmpHow"][value="' + (prefs.how === 'any' ? 'any' : 'pos') + '"]').checked = true;
+  $('#pane-cmp').dataset.how = prefs.how === 'any' ? 'any' : 'pos';
+  $('#paintA').checked = !!prefs.paintA; $('#paintB').checked = !!prefs.paintB;
+  $('#optCase').checked = !!prefs.cs; $('#optTrim').checked = !!prefs.trim;
+  $('#cmpTol').value = prefs.tol || '0';
+  setCmpMode(prefs.cmpMode === 'dup' ? 'dup' : 'diff');
+  $$('#pane-cmp input').forEach(i => i.addEventListener('change', () => {
+    $('#pane-cmp').dataset.how = cmpOpts().how; saveCmpPrefs();
+  }));
+  ['rngA', 'rngB', 'rngD'].forEach(id => $('#' + id).addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); $('#cmpRun').click(); } }));
+  document.addEventListener('click', e => {
+    const pk = e.target.closest && e.target.closest('[data-pick]'); if (pk){ pickSelection(pk.dataset.pick); return; }
+    const md = e.target.closest && e.target.closest('[data-cmpmode]'); if (md) setCmpMode(md.dataset.cmpmode);
+  });
+}
+
 /* ---------- eventos de interfaz ---------- */
 function bindList(ul, opts){
   const rowOf = t => t.closest && t.closest('.row');
@@ -967,11 +1418,13 @@ function bindList(ul, opts){
 
 function showPane(p){
   state.pane = p;
-  $('#pane-sheets').hidden = p !== 'sheets'; $('#pane-deps').hidden = p !== 'deps';
-  $('#tab-sheets').setAttribute('aria-selected', String(p === 'sheets'));
-  $('#tab-deps').setAttribute('aria-selected', String(p === 'deps'));
+  ['sheets', 'deps', 'cmp'].forEach(x => {
+    $('#pane-' + x).hidden = x !== p;
+    $('#tab-' + x).setAttribute('aria-selected', String(x === p));
+  });
   closeMenu();
   if (p === 'deps'){ if (!sheetById(state.depSel)) state.depSel = state.activeId; renderDeps(); if (!state.analysis) analyze(); }
+  else if (p === 'cmp') renderCmpStatus();
   else renderSheets();
 }
 
@@ -992,6 +1445,8 @@ function bindUi(){
     else if (a === 'protectActive'){ if (state.activeId) toggleProtect(state.activeId); }
     else if (a === 'addSheet') addSheet();
     else if (a === 'analyze') analyze();
+    else if (a === 'clearMenu') clearMenu(b);
+    else if (a === 'cmpRun') { if (state.cmpMode === 'dup') runDup(); else runDiff(); }
   });
   const fOn = $('#filterOn'), fTx = $('#filterText');
   fOn.addEventListener('change', () => { state.filterOn = fOn.checked; renderSheets(); });
@@ -1012,6 +1467,7 @@ function bindUi(){
     getKbd: () => state.depKbdId, setKbd: id => { state.depKbdId = id; state.depSel = id; renderDepDetail(); $$('#depList .row').forEach(r => r.classList.toggle('picked', r.dataset.id === id)); }
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+  bindCmp();
   window.addEventListener('resize', closeMenu);
   window.addEventListener('blur', closeMenu);
 }
