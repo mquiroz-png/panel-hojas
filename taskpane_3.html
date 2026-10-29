@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel de Hojas</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<style>
+:root{
+  --bg:#ffffff; --fg:#1b1b1b; --muted:#6d6d6d; --line:#a9a9a9; --line-soft:#d6d6d6;
+  --bar:#f3f3f3; --bar-line:#c8c8c8; --rail:#e8ecf1;
+  --title:#3e8a34; --sel:#abd9a2; --sel-line:#82c076;
+  --hover:#e3effb; --hover-line:#a5caee; --pressed:#d2e6f8; --pressed-line:#7fb1e3;
+  --link:#1f63b4; --danger:#b3261e; --warn-bg:#fff5d1; --warn-line:#dfc15e;
+  --pill-dep:#2f6db3; --pill-use:#3e8a34; --sq-line:#8a8a8a;
+  --ico-blue:#1f5fae; --ico-ink:#3b3b3b;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#1f1f1f; --fg:#e6e6e6; --muted:#a0a0a0; --line:#4d4d4d; --line-soft:#3a3a3a;
+    --bar:#2a2a2a; --bar-line:#444; --rail:#262a2f;
+    --title:#7cc96f; --sel:#355f2f; --sel-line:#4f8a45;
+    --hover:#23364a; --hover-line:#3e6491; --pressed:#2a4561; --pressed-line:#4d7fb5;
+    --link:#7fb4f0; --danger:#ff8a80; --warn-bg:#3d3418; --warn-line:#7a6526;
+    --pill-dep:#3f7fc7; --pill-use:#4c9a41; --sq-line:#777;
+    --ico-blue:#79aef0; --ico-ink:#d2d2d2;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:12px/1.3 Tahoma,"Segoe UI",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;overflow:hidden}
+body.big{font-size:13.5px}
+button,input{font:inherit;color:inherit}
+button{cursor:default}
+:focus-visible{outline:2px solid var(--link);outline-offset:-2px}
+
+#app{display:grid;grid-template-columns:30px 1fr;height:100%}
+.rail{background:var(--rail);border-right:1px solid var(--bar-line);display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:5px}
+.rail button{width:26px;height:26px;display:grid;place-items:center;padding:0;border:1px solid transparent;border-radius:2px;background:transparent}
+.rail button:hover{background:var(--hover);border-color:var(--hover-line)}
+.rail button[aria-selected="true"]{background:var(--bg);border-color:var(--bar-line)}
+.rail svg{width:20px;height:20px}
+
+main{min-width:0;display:flex;flex-direction:column;height:100%}
+.pane{display:flex;flex-direction:column;min-height:0;flex:1}
+.pane[hidden]{display:none}
+.title{display:flex;align-items:center;justify-content:space-between;padding:5px 6px 4px;color:var(--title);font-weight:700;font-size:13px}
+.title small{font-weight:400;color:var(--muted);font-size:11px}
+
+.bar{display:flex;align-items:center;gap:1px;min-height:27px;padding:0 3px;background:var(--bar);border-top:1px solid var(--bar-line);border-bottom:1px solid var(--bar-line)}
+.tb{height:22px;min-width:24px;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:0 3px;border:1px solid transparent;border-radius:2px;background:transparent}
+.tb:hover:not(:disabled){background:var(--hover);border-color:var(--hover-line)}
+.tb[aria-pressed="true"]{background:var(--pressed);border-color:var(--pressed-line)}
+.tb:disabled{opacity:.4}
+.tb svg{width:16px;height:16px;flex:none}
+.tb svg.w20{width:20px}
+.tb.text{padding:0 7px 0 4px}
+.sep{width:1px;height:16px;background:var(--bar-line);margin:0 3px}
+.spacer{flex:1}
+
+.wb-box{margin:3px;border:1px solid var(--line);padding:1px;min-height:40px;background:var(--bg)}
+.wb-item{display:flex;align-items:center;gap:6px;height:20px;padding:0 5px;background:var(--sel);border:1px solid var(--sel-line);font-weight:700;white-space:nowrap}
+.wb-item .nm{overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.wb-item .count{font-weight:400;color:var(--fg);opacity:.75;flex:none}
+
+.filter{display:flex;align-items:center;gap:5px;padding:4px 4px 3px}
+.filter label{display:flex;align-items:center;gap:3px;white-space:nowrap}
+.filter input[type="checkbox"]{margin:0}
+.filter input[type="search"]{flex:1;min-width:0;height:21px;border:1px solid var(--line);border-radius:0;padding:0 4px;background:var(--bg);-webkit-appearance:none;appearance:none}
+
+.list{list-style:none;margin:0 3px 3px;padding:1px;border:1px solid var(--line);flex:1;min-height:60px;overflow:auto;background:var(--bg)}
+.list:focus{outline:none}
+.row{display:flex;align-items:center;gap:6px;height:19px;padding:0 4px;border:1px solid transparent;white-space:nowrap;user-select:none;-webkit-user-select:none}
+.row:hover{background:var(--hover);border-color:var(--hover-line)}
+.row.active{background:var(--sel);border-color:var(--sel-line);font-weight:700}
+.row.picked{background:var(--pressed);border-color:var(--pressed-line)}
+.row.active.picked{background:var(--sel);border-color:var(--sel-line);box-shadow:inset 0 0 0 1px var(--pressed-line)}
+.list:focus-visible .row.kbd{outline:1px dotted var(--fg);outline-offset:-3px}
+.sq{flex:none;width:8px;height:8px;border:1px solid var(--sq-line);background:var(--bg)}
+.nm{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.row.is-hidden .nm{color:var(--muted);font-style:italic}
+.tag{flex:none;color:var(--muted);font-weight:400;font-size:.9em}
+.mini{flex:none;width:10px;height:10px;opacity:.8}
+.ren{flex:1;min-width:0;height:17px;border:1px solid var(--link);padding:0 3px;background:var(--bg);font-weight:400}
+.empty{padding:16px 10px;color:var(--muted);text-align:center;line-height:1.5}
+.empty .tb{margin-top:8px;border-color:var(--bar-line);background:var(--bar)}
+
+.status{padding:3px 6px;border-top:1px solid var(--bar-line);background:var(--bar);color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status .demo{color:var(--danger)}
+
+/* Dependencias */
+.progress{height:3px;margin:0 3px}
+.progress i{display:block;height:100%;width:0;background:var(--title);transition:width .15s}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin:3px}
+.stat{border:1px solid var(--line-soft);padding:3px 6px;background:var(--bg)}
+.stat b{display:block;font-size:14px}
+.stat span{color:var(--muted);font-size:10.5px}
+.stat.warn b{color:var(--danger)}
+.legend{display:flex;gap:12px;padding:1px 7px 3px;color:var(--muted);font-size:10.5px}
+.legend span{display:flex;align-items:center;gap:4px}
+.legend i{width:9px;height:9px;border-radius:50%}
+.pills{margin-left:auto;display:flex;gap:3px;flex:none}
+.pill{min-width:18px;height:14px;line-height:14px;border-radius:7px;padding:0 4px;font-size:10px;font-weight:700;color:#fff;text-align:center}
+.pill.dep{background:var(--pill-dep)}
+.pill.use{background:var(--pill-use)}
+.pill.zero{background:transparent;color:var(--muted);border:1px solid var(--line-soft);line-height:12px}
+#depList{flex:0 1 42%;min-height:90px}
+.detail{flex:1 1 58%;min-height:80px;overflow:auto;margin:0 3px 3px;border:1px solid var(--line);padding:6px 8px 8px;background:var(--bg)}
+.dhead{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
+.dhead .nm{flex:1}
+.dmeta{color:var(--muted);margin:2px 0 4px}
+.detail h4{margin:9px 0 3px;font-size:11.5px;color:var(--title)}
+.dl summary{display:flex;align-items:center;gap:6px;padding:2px 0;list-style:none}
+.dl summary::-webkit-details-marker{display:none}
+.caret{flex:none;width:0;height:0;border-left:5px solid var(--muted);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .12s}
+.dl[open] > summary .caret{transform:rotate(90deg)}
+.link{background:none;border:0;padding:0;color:var(--link);text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.link:hover{text-decoration:underline}
+.cnt{margin-left:auto;color:var(--muted);font-size:10.5px;white-space:nowrap;flex:none}
+.chips{display:flex;flex-wrap:wrap;gap:3px;padding:3px 0 7px 11px}
+.chip{padding:1px 5px;border:1px solid var(--line-soft);background:var(--bar);border-radius:2px;font-size:11px;cursor:pointer}
+.chip:hover{background:var(--hover);border-color:var(--hover-line)}
+.more{color:var(--muted);font-size:11px;align-self:center}
+.none{color:var(--muted);padding:1px 0 2px}
+.stale{margin:3px;padding:4px 6px;background:var(--warn-bg);border:1px solid var(--warn-line);font-size:11px;display:flex;gap:6px;align-items:center}
+.stale span{flex:1}
+.stale .link{flex:none}
+
+/* Comparar y duplicados */
+#pane-cmp{overflow-y:auto}
+.form{flex:none;display:flex;flex-direction:column;gap:7px;padding:6px 7px 4px}
+.field label{display:block;font-weight:700;margin-bottom:2px}
+.inrow{display:flex;gap:3px}
+.inrow input{flex:1;min-width:0;height:22px;border:1px solid var(--line);border-radius:0;padding:0 4px;background:var(--bg)}
+.inrow .tb{border-color:var(--bar-line);background:var(--bar);flex:none}
+.hint{margin:-2px 0 0;color:var(--muted);font-size:11px;line-height:1.35}
+.opts{display:flex;flex-direction:column;gap:3px}
+.opts.inline{flex-direction:row;flex-wrap:wrap;gap:3px 14px}
+.opts .olabel{font-weight:700;width:100%}
+.opts label{display:flex;align-items:center;gap:5px}
+.opts input[type="checkbox"],.opts input[type="radio"]{margin:0;flex:none}
+.tol input{width:60px;height:20px;border:1px solid var(--line);border-radius:0;padding:0 4px;background:var(--bg)}
+.swatch{display:inline-block;width:10px;height:10px;border:1px solid;flex:none}
+.swatch.red{background:#FFC7CE;border-color:#9C0006}
+.swatch.green{background:#C6EFCE;border-color:#006100}
+.btn.run{height:27px;font-weight:700;margin-top:1px}
+.btn.run-red{border-color:#b3484f;background:linear-gradient(#ffe1e4,#ffc7ce);color:#5c0004}
+.btn.run-green{border-color:#4f8f4a;background:linear-gradient(#e2f5e2,#c6efce);color:#063d06}
+.btn.run:disabled{opacity:.6}
+#pane-cmp[data-mode="dup"] .only-diff,#pane-cmp[data-mode="diff"] .only-dup,#pane-cmp[data-how="any"] .only-pos{display:none}
+#cmpResult{flex:1 1 0;min-height:150px}
+.rhead{font-weight:700;font-size:13px}
+.rnote{color:var(--muted);font-size:11px;margin-top:7px;line-height:1.35}
+.dlist{display:flex;flex-direction:column;padding:3px 0 4px}
+.drow{display:flex;align-items:center;gap:6px;width:100%;min-height:19px;padding:1px 4px;border:1px solid transparent;background:none;text-align:left}
+.drow:hover{background:var(--hover);border-color:var(--hover-line)}
+.drow .ad{flex:none;min-width:46px;color:var(--muted)}
+.drow .v{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drow .ne{flex:none;color:#b3261e;font-weight:700}
+
+/* Menús, diálogos y avisos */
+.menu{position:fixed;z-index:50;min-width:190px;max-height:calc(100vh - 8px);overflow:auto;background:var(--bg);border:1px solid #979797;box-shadow:2px 3px 8px rgba(0,0,0,.22);padding:2px}
+.mi{display:flex;align-items:center;gap:6px;width:100%;height:22px;padding:0 12px 0 4px;border:1px solid transparent;background:none;text-align:left;white-space:nowrap}
+.mi:hover:not(:disabled),.mi:focus-visible{background:var(--hover);border-color:var(--hover-line);outline:none}
+.mi:disabled{color:var(--muted)}
+.mi .chk{width:16px;text-align:center;flex:none}
+.mi .hint{margin-left:auto;padding-left:16px;color:var(--muted);font-size:11px}
+.mi.danger{color:var(--danger)}
+.msep{height:1px;background:var(--line-soft);margin:3px 2px}
+.mlabel{padding:4px 8px 2px 26px;color:var(--muted);font-size:11px}
+.swatches{display:grid;grid-template-columns:repeat(5,22px);gap:4px;padding:3px 8px 5px 26px}
+.sw{width:22px;height:15px;border:1px solid #6f6f6f;padding:0}
+.sw:hover,.sw:focus-visible{outline:2px solid var(--link);outline-offset:1px}
+
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.28);display:grid;place-items:center;z-index:60;padding:10px}
+.modal{width:min(100%,310px);background:var(--bg);border:1px solid #8a8a8a;box-shadow:3px 4px 14px rgba(0,0,0,.3)}
+.modal h3{margin:0;padding:6px 9px;background:var(--bar);border-bottom:1px solid var(--bar-line);font-size:12px;color:var(--title)}
+.modal .body{padding:10px 11px 4px;line-height:1.5;max-height:60vh;overflow:auto}
+.modal .body p{margin:0 0 8px}
+.modal .body ul{margin:0 0 8px;padding-left:16px}
+.modal .body li{margin-bottom:4px}
+.modal .actions{display:flex;justify-content:flex-end;gap:6px;padding:8px 11px 11px}
+.btn{height:23px;padding:0 13px;border:1px solid #8f8f8f;border-radius:2px;background:linear-gradient(#fdfdfd,#e7e7e7)}
+.btn:hover{border-color:var(--hover-line)}
+.btn.primary{border-color:#5d9b52;background:linear-gradient(#cfeac8,#a7d69c);color:#14320f}
+.btn.danger{border-color:#a8473f;background:linear-gradient(#f7d3cf,#eaa9a2);color:#4a0c07}
+@media (prefers-color-scheme: dark){
+  .btn{background:linear-gradient(#3a3a3a,#2e2e2e);border-color:#5a5a5a}
+}
+
+.toast{position:fixed;left:36px;right:6px;bottom:28px;background:#2f2f2f;color:#fff;padding:7px 9px;border-radius:3px;font-size:12px;line-height:1.4;opacity:0;transform:translateY(6px);transition:opacity .18s,transform .18s;pointer-events:none;z-index:70}
+.toast.show{opacity:1;transform:none}
+.toast.err{background:#9e2a22}
+@media (prefers-reduced-motion: reduce){ .toast,.progress i,.caret{transition:none} }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="g-sheet">
+      <rect x="1.5" y="1.5" width="11" height="10" fill="#fff" stroke="#6f7b88"/>
+      <rect x="2" y="2" width="10" height="2" fill="#8fb8e3"/>
+      <path d="M2 6.5h10M2 9h10M5.5 4v7M9 4v7" stroke="#b9c2cc"/>
+    </g>
+    <symbol id="i-menu" viewBox="0 0 20 16"><path d="M2 4h10M2 7.5h10M2 11h10" style="stroke:var(--ico-blue)" stroke-width="1.6"/><path d="M14 7l2.5 3 2.5-3z" style="fill:var(--ico-ink)"/></symbol>
+    <symbol id="i-az" viewBox="0 0 16 16"><text x="0.5" y="7" font-size="7.5" font-weight="700" font-family="Arial,Helvetica,sans-serif" style="fill:var(--ico-blue)">A</text><text x="0.5" y="15" font-size="7.5" font-weight="700" font-family="Arial,Helvetica,sans-serif" style="fill:var(--ico-blue)">Z</text><path d="M11.5 1.5v10" style="stroke:var(--ico-ink)" stroke-width="1.3"/><path d="M8.6 10.4l2.9 3.6 2.9-3.6z" style="fill:var(--ico-ink)"/></symbol>
+    <symbol id="i-za" viewBox="0 0 16 16"><text x="0.5" y="7" font-size="7.5" font-weight="700" font-family="Arial,Helvetica,sans-serif" style="fill:var(--ico-blue)">Z</text><text x="0.5" y="15" font-size="7.5" font-weight="700" font-family="Arial,Helvetica,sans-serif" style="fill:var(--ico-blue)">A</text><path d="M11.5 1.5v10" style="stroke:var(--ico-ink)" stroke-width="1.3"/><path d="M8.6 10.4l2.9 3.6 2.9-3.6z" style="fill:var(--ico-ink)"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13.2 8.4A5.2 5.2 0 1 1 11.6 4.3" fill="none" stroke="#1f6fc5" stroke-width="2" stroke-linecap="round"/><path d="M9.4 1.4h4.8v4.8z" fill="#1f6fc5"/></symbol>
+    <symbol id="i-help" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#1f6fc5"/><path d="M6 6.2a2 2 0 1 1 2.8 1.8c-.6.3-.8.7-.8 1.3v.4" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="12" r="1" fill="#fff"/></symbol>
+    <symbol id="i-ghost" viewBox="0 0 16 16"><rect x="4.5" y="4.5" width="10.5" height="10.5" fill="none" stroke="#8a8a8a" stroke-dasharray="2 1.4"/><use href="#g-sheet"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 16 16"><use href="#g-sheet"/><path d="M7.4 12.4c1.4-2.2 2.8-3 4.1-3s2.7.8 4.1 3c-1.4 2.2-2.8 3-4.1 3s-2.7-.8-4.1-3z" fill="#fff" stroke="#1f6fc5" stroke-width="1.1"/><circle cx="11.5" cy="12.4" r="1.4" fill="#1f6fc5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 16 16"><use href="#g-sheet"/><path d="M10.2 10.6V9.2a1.8 1.8 0 0 1 3.6 0v1.4" fill="none" stroke="#7a5b12" stroke-width="1.3"/><rect x="9.2" y="10.6" width="5.6" height="4.6" rx=".6" fill="#e2b33c" stroke="#7a5b12" stroke-width=".8"/></symbol>
+    <symbol id="i-add" viewBox="0 0 16 16"><use href="#g-sheet"/><circle cx="12" cy="12" r="3.6" fill="#3a9a3a"/><path d="M12 10v4M10 12h4" stroke="#fff" stroke-width="1.5"/></symbol>
+    <symbol id="i-sync" viewBox="0 0 16 16"><path d="M2.6 7.2a5.4 5.4 0 0 1 9.4-3.1" fill="none" stroke="#2f9a3a" stroke-width="2" stroke-linecap="round"/><path d="M10.2 1.3l4 .4-1 3.9z" fill="#2f9a3a"/><path d="M13.4 8.8a5.4 5.4 0 0 1-9.4 3.1" fill="none" stroke="#2f9a3a" stroke-width="2" stroke-linecap="round"/><path d="M5.8 14.7l-4-.4 1-3.9z" fill="#2f9a3a"/></symbol>
+    <symbol id="i-minilock" viewBox="0 0 10 10"><path d="M3 4.5V3.2a2 2 0 0 1 4 0v1.3" fill="none" stroke="#8a6a1a" stroke-width="1.1"/><rect x="2" y="4.5" width="6" height="4.8" rx=".6" fill="#e2b33c"/></symbol>
+    <symbol id="i-rail-sheets" viewBox="0 0 20 20"><rect x="5.5" y="2.5" width="12" height="10" fill="#fff" stroke="#6f7b88"/><rect x="2.5" y="6.5" width="12" height="10" fill="#fff" stroke="#6f7b88"/><rect x="3" y="7" width="11" height="2.2" fill="#3e8a34"/><path d="M3 12h11M3 14.5h11M7 9.2v7M10.5 9.2v7" stroke="#b9c2cc"/></symbol>
+    <symbol id="i-rail-deps" viewBox="0 0 20 20"><path d="M5.5 5.5L14.5 9M5.5 5.5L8 15.5M14.5 9L8 15.5" stroke="#6f7b88" stroke-width="1.3"/><rect x="2.5" y="3" width="6" height="5" fill="#fff" stroke="#1f6fc5" stroke-width="1.3"/><rect x="11.5" y="6.5" width="6" height="5" fill="#fff" stroke="#3e8a34" stroke-width="1.3"/><rect x="5" y="13" width="6" height="5" fill="#fff" stroke="#c48a12" stroke-width="1.3"/></symbol>
+    <symbol id="i-rail-cmp" viewBox="0 0 20 20"><rect x="2.5" y="2.5" width="6.5" height="15" fill="#fff" stroke="#6f7b88"/><rect x="11" y="2.5" width="6.5" height="15" fill="#fff" stroke="#6f7b88"/><rect x="11.5" y="7.5" width="5.5" height="4.5" fill="#f3a0a7"/><rect x="3" y="12.5" width="5.5" height="4.5" fill="#9fd79a"/><path d="M3 7.5h5.5M3 12.5h5.5M11.5 7.5h5.5M11.5 12h5.5" stroke="#b9c2cc"/></symbol>
+    <symbol id="i-eraser" viewBox="0 0 16 16"><path d="M9.6 2.2l4.2 4.2-6.6 6.6H4.6L2.4 10.8z" fill="#f4bccb" stroke="#99475c"/><path d="M5.6 7.4l3.9 3.9" stroke="#99475c"/><path d="M8.5 14h6" style="stroke:var(--ico-ink)" stroke-width="1.2"/></symbol>
+  </defs>
+</svg>
+
+<div id="app">
+  <nav class="rail" role="tablist" aria-label="Paneles">
+    <button id="tab-sheets" role="tab" aria-selected="true" aria-controls="pane-sheets" title="Libro y hojas"><svg><use href="#i-rail-sheets"/></svg></button>
+    <button id="tab-deps" role="tab" aria-selected="false" aria-controls="pane-deps" title="Dependencias entre hojas"><svg><use href="#i-rail-deps"/></svg></button>
+    <button id="tab-cmp" role="tab" aria-selected="false" aria-controls="pane-cmp" title="Comparar y buscar duplicados"><svg><use href="#i-rail-cmp"/></svg></button>
+  </nav>
+
+  <main>
+    <!-- ===== Libro y hojas ===== -->
+    <section id="pane-sheets" class="pane" role="tabpanel" aria-labelledby="tab-sheets">
+      <div class="title"><span>Libro y hojas</span></div>
+
+      <div class="bar" role="toolbar" aria-label="Vista">
+        <button class="tb" data-act="viewMenu" title="Opciones de vista" aria-haspopup="menu"><svg class="w20"><use href="#i-menu"/></svg></button>
+        <button class="tb" data-act="sortAZ" title="Ordenar la lista de A a Z" aria-pressed="false"><svg><use href="#i-az"/></svg></button>
+        <button class="tb" data-act="sortZA" title="Ordenar la lista de Z a A" aria-pressed="false"><svg><use href="#i-za"/></svg></button>
+        <span class="sep"></span>
+        <button class="tb" data-act="reload" title="Actualizar"><svg><use href="#i-refresh"/></svg></button>
+        <span class="spacer"></span>
+        <button class="tb" data-act="help" title="Ayuda"><svg><use href="#i-help"/></svg></button>
+      </div>
+
+      <div class="wb-box">
+        <div class="wb-item" title="Libro actual"><span class="nm" id="wbName">Cargando…</span><span class="count" id="wbCount"></span></div>
+      </div>
+
+      <div class="bar" role="toolbar" aria-label="Hojas">
+        <button class="tb" data-act="sheetMenu" title="Acciones de hoja" aria-haspopup="menu"><svg class="w20"><use href="#i-menu"/></svg></button>
+        <button class="tb" data-act="toggleHidden" title="Ver también las hojas ocultas en la lista" aria-pressed="false"><svg><use href="#i-ghost"/></svg></button>
+        <button class="tb" data-act="unhideAll" title="Mostrar todas las hojas ocultas"><svg><use href="#i-eye"/></svg></button>
+        <button class="tb" data-act="protectActive" title="Proteger o desproteger la hoja activa"><svg><use href="#i-lock"/></svg></button>
+        <span class="sep"></span>
+        <button class="tb" data-act="addSheet" title="Insertar hoja nueva"><svg><use href="#i-add"/></svg></button>
+        <button class="tb" data-act="reload" title="Actualizar lista"><svg><use href="#i-sync"/></svg></button>
+      </div>
+
+      <div class="filter">
+        <label><input type="checkbox" id="filterOn"> Filtro:</label>
+        <input type="search" id="filterText" placeholder="Buscar hoja" aria-label="Texto del filtro" autocomplete="off" spellcheck="false">
+      </div>
+
+      <ul class="list" id="sheetList" role="listbox" tabindex="0" aria-label="Hojas del libro"></ul>
+      <div class="status" id="status"></div>
+    </section>
+
+    <!-- ===== Dependencias ===== -->
+    <section id="pane-deps" class="pane" role="tabpanel" aria-labelledby="tab-deps" hidden>
+      <div class="title"><span>Dependencias</span><small id="depWhen"></small></div>
+      <div class="bar" role="toolbar" aria-label="Análisis">
+        <button class="tb text" data-act="analyze" title="Leer las fórmulas de todas las hojas"><svg><use href="#i-sync"/></svg><span>Analizar</span></button>
+        <span class="spacer"></span>
+        <button class="tb" data-act="help" title="Ayuda"><svg><use href="#i-help"/></svg></button>
+      </div>
+      <div class="progress" aria-hidden="true"><i id="depProgress"></i></div>
+      <div id="depStale" class="stale" hidden><span>El libro cambió desde el último análisis.</span><button class="link" data-act="analyze">Analizar de nuevo</button></div>
+      <div class="summary" id="depSummary"></div>
+      <div class="legend"><span><i style="background:var(--pill-dep)"></i>depende de</span><span><i style="background:var(--pill-use)"></i>usada por</span></div>
+      <ul class="list" id="depList" role="listbox" tabindex="0" aria-label="Hojas analizadas"></ul>
+      <div class="detail" id="depDetail" aria-live="polite"></div>
+      <div class="status" id="depStatus"></div>
+    </section>
+
+    <!-- ===== Comparar y duplicados ===== -->
+    <section id="pane-cmp" class="pane" role="tabpanel" aria-labelledby="tab-cmp" data-mode="diff" data-how="pos" hidden>
+      <div class="title"><span>Comparar y duplicados</span></div>
+      <div class="bar" role="toolbar" aria-label="Herramienta">
+        <button class="tb text" data-cmpmode="diff" aria-pressed="true" title="Comparar dos columnas o filas"><span class="swatch red"></span>Diferencias</button>
+        <button class="tb text" data-cmpmode="dup" aria-pressed="false" title="Buscar valores repetidos"><span class="swatch green"></span>Duplicados</button>
+        <span class="spacer"></span>
+        <button class="tb" data-act="clearMenu" title="Quitar los colores puestos por el panel" aria-haspopup="menu"><svg><use href="#i-eraser"/></svg></button>
+        <button class="tb" data-act="help" title="Ayuda"><svg><use href="#i-help"/></svg></button>
+      </div>
+      <div class="form">
+        <div class="field only-diff"><label for="rngA">Rango 1</label><div class="inrow"><input id="rngA" type="text" placeholder="Ej.: B2:B200" spellcheck="false" autocomplete="off"><button class="tb text" data-pick="rngA" title="Usar lo seleccionado en Excel">Selección</button></div></div>
+        <div class="field only-diff"><label for="rngB">Rango 2</label><div class="inrow"><input id="rngB" type="text" placeholder="Ej.: HDPE!C2:C200" spellcheck="false" autocomplete="off"><button class="tb text" data-pick="rngB" title="Usar lo seleccionado en Excel">Selección</button></div></div>
+        <div class="field only-dup"><label for="rngD">Rango</label><div class="inrow"><input id="rngD" type="text" placeholder="Ej.: B2:B200" spellcheck="false" autocomplete="off"><button class="tb text" data-pick="rngD" title="Usar lo seleccionado en Excel">Selección</button></div></div>
+        <p class="hint only-diff">Puedes seleccionar las dos columnas a la vez (con Cmd si están separadas) y pulsar Selección en el Rango 1.</p>
+        <div class="opts only-diff" role="radiogroup" aria-label="Cómo comparar">
+          <span class="olabel">Cómo comparar</span>
+          <label><input type="radio" name="cmpHow" value="pos" checked> Celda por celda, en la misma posición</label>
+          <label><input type="radio" name="cmpHow" value="any"> Si el valor existe en el otro rango</label>
+        </div>
+        <div class="opts inline only-diff">
+          <span class="olabel">Pintar en rojo</span>
+          <label><input type="checkbox" id="paintA" checked> Rango 1</label>
+          <label><input type="checkbox" id="paintB" checked> Rango 2</label>
+        </div>
+        <div class="opts">
+          <span class="olabel">Opciones</span>
+          <label><input type="checkbox" id="optTrim" checked> Ignorar espacios sobrantes</label>
+          <label><input type="checkbox" id="optCase"> Distinguir mayúsculas y minúsculas</label>
+          <label class="tol only-diff only-pos" title="Diferencias menores a 0,000001 siempre se consideran iguales">Tolerancia para números <input type="text" id="cmpTol" value="0" inputmode="decimal" aria-label="Tolerancia para números"></label>
+        </div>
+        <button class="btn run run-red" id="cmpRun" data-act="cmpRun">Marcar diferencias en rojo</button>
+      </div>
+      <div class="detail" id="cmpResult"><div class="empty">Elige dos columnas o filas y pulsa Marcar diferencias.</div></div>
+      <div class="status" id="cmpStatus"></div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+/* ---------- utilidades ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+function h(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function icon(id, cls){ const ns = 'http://www.w3.org/2000/svg'; const s = document.createElementNS(ns, 'svg'); if (cls) s.setAttribute('class', cls); const u = document.createElementNS(ns, 'use'); u.setAttribute('href', '#' + id); s.appendChild(u); return s; }
+const lc = s => String(s).toLowerCase();
+const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const fmt = n => Number(n).toLocaleString('es-CL');
+const plural = (n, uno, varios) => fmt(n) + ' ' + (n === 1 ? uno : varios);
+function colName(c){ let s = ''; c++; while (c > 0){ const m = (c - 1) % 26; s = String.fromCharCode(65 + m) + s; c = Math.floor((c - 1) / 26); } return s; }
+const cellAddr = (r, c) => colName(c) + (r + 1);
+
+const TAB_COLORS = ['#C00000','#FF0000','#FFC000','#FFFF00','#92D050','#00B050','#00B0F0','#0070C0','#002060','#7030A0'];
+
+/* ---------- preferencias ---------- */
+const PREFS_KEY = 'abc.panelHojas.prefs.v1';
+const prefs = Object.assign({ sort: 'pos', showHidden: false, showColor: true, big: false, cmpMode: 'diff', how: 'pos', paintA: true, paintB: true, cs: false, trim: true, tol: '0' }, (() => {
+  try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || {}; } catch (e) { return {}; }
+})());
+function savePrefs(){ try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (e) {} }
+
+/* ---------- estado ---------- */
+const state = {
+  api: null, demo: false, wbName: '', sheets: [], activeId: null,
+  filterOn: false, filterText: '', kbdId: null, renamingId: null, pendingRender: false,
+  pane: 'sheets', analysis: null, analysisSig: '', analysisStale: false, analyzing: false,
+  depSel: null, depKbdId: null
+};
+const sheetById = id => state.sheets.find(s => s.id === id);
+const sheetByName = name => state.sheets.find(s => lc(s.name) === lc(name));
+const visibleCount = () => state.sheets.filter(s => s.visibility === 'Visible').length;
+
+/* ---------- capa Excel (Office.js) ---------- */
+const ExcelApi = {
+  supports(v){ try { return Office.context.requirements.isSetSupported('ExcelApi', v); } catch (e) { return false; } },
+  async workbookName(){
+    try {
+      return await Excel.run(async ctx => { const wb = ctx.workbook; wb.load('name'); await ctx.sync(); return wb.name; });
+    } catch (e) {
+      const url = (Office.context.document && Office.context.document.url) || '';
+      return decodeURIComponent(url.split(/[\\/]/).pop() || 'Libro actual');
+    }
+  },
+  async listSheets(){
+    return Excel.run(async ctx => {
+      const col = ctx.workbook.worksheets;
+      col.load('items/id,items/name,items/position,items/visibility,items/tabColor');
+      const act = col.getActiveWorksheet(); act.load('id');
+      await ctx.sync();
+      const prot = col.items.map(ws => { ws.protection.load('protected'); return ws.protection; });
+      await ctx.sync();
+      return {
+        activeId: act.id,
+        sheets: col.items.map((ws, i) => ({ id: ws.id, name: ws.name, position: ws.position, visibility: ws.visibility, tabColor: ws.tabColor || '', protected: !!prot[i].protected }))
+      };
+    });
+  },
+  async withSheet(id, fn){ return Excel.run(async ctx => { const ws = ctx.workbook.worksheets.getItem(id); const r = fn(ws, ctx); await ctx.sync(); return r; }); },
+  activate(id){ return this.withSheet(id, ws => ws.activate()); },
+  rename(id, name){ return this.withSheet(id, ws => { ws.name = name; }); },
+  setVisible(id, on){ return this.withSheet(id, ws => { ws.visibility = on ? 'Visible' : 'Hidden'; }); },
+  setTabColor(id, color){ return this.withSheet(id, ws => { ws.tabColor = color || ''; }); },
+  setProtected(id, on){ return this.withSheet(id, ws => { if (on) ws.protection.protect(); else ws.protection.unprotect(); }); },
+  move(id, pos){ return this.withSheet(id, ws => { ws.position = pos; }); },
+  remove(id){ return this.withSheet(id, ws => ws.delete()); },
+  canDuplicate(){ return this.supports('1.10'); },
+  async duplicate(id){
+    return Excel.run(async ctx => { const ws = ctx.workbook.worksheets.getItem(id); const cp = ws.copy('After', ws); cp.load('id'); cp.activate(); await ctx.sync(); return cp.id; });
+  },
+  async add(name){
+    return Excel.run(async ctx => { const ws = ctx.workbook.worksheets.add(name); ws.activate(); ws.load('id'); await ctx.sync(); return ws.id; });
+  },
+  async goto(sheet, addr){
+    return Excel.run(async ctx => { const ws = ctx.workbook.worksheets.getItem(sheet); ws.activate(); ws.getRange(addr).select(); await ctx.sync(); });
+  },
+  async readFormulas(id, onChunk){
+    return Excel.run(async ctx => {
+      const ws = ctx.workbook.worksheets.getItem(id);
+      const ur = ws.getUsedRangeOrNullObject(true);
+      ur.load('rowIndex,columnIndex,rowCount,columnCount');
+      await ctx.sync();
+      if (ur.isNullObject) return;
+      const rowsPer = Math.max(1, Math.floor(60000 / Math.max(1, ur.columnCount)));
+      for (let r = 0; r < ur.rowCount; r += rowsPer){
+        const n = Math.min(rowsPer, ur.rowCount - r);
+        const rg = ws.getRangeByIndexes(ur.rowIndex + r, ur.columnIndex, n, ur.columnCount);
+        rg.load('formulas');
+        await ctx.sync();
+        onChunk(rg.formulas, ur.rowIndex + r, ur.columnIndex);
+      }
+    });
+  },
+  async getSelectionAreas(){
+    const multi = this.supports('1.9');
+    return Excel.run(async ctx => {
+      let items;
+      if (multi){ const ra = ctx.workbook.getSelectedRanges(); ra.areas.load('items/address,items/rowCount,items/columnCount'); await ctx.sync(); items = ra.areas.items; }
+      else { const r = ctx.workbook.getSelectedRange(); r.load('address,rowCount,columnCount'); await ctx.sync(); items = [r]; }
+      const out = items.map(r => ({ address: r.address, rowCount: r.rowCount, columnCount: r.columnCount, split: null }));
+      if (items.length === 1){
+        const r = items[0]; let parts = null;
+        if (r.columnCount === 2 && r.rowCount > 1) parts = [r.getColumn(0), r.getColumn(1)];
+        else if (r.rowCount === 2 && r.columnCount > 1) parts = [r.getRow(0), r.getRow(1)];
+        if (parts){ parts.forEach(x => x.load('address')); await ctx.sync(); out[0].split = parts.map(x => x.address); }
+      }
+      return out;
+    });
+  },
+  async resolveRanges(texts){
+    return Excel.run(async ctx => {
+      const act = ctx.workbook.worksheets.getActiveWorksheet();
+      const its = texts.map(t => {
+        const p = parseAddr(t);
+        const ws = p.sheet ? ctx.workbook.worksheets.getItem(p.sheet) : act;
+        let rg = ws.getRange(p.cells);
+        if (isWhole(p.cells)) rg = rg.getIntersectionOrNullObject(ws.getUsedRange(true));
+        ws.load('name'); rg.load('rowIndex,columnIndex,rowCount,columnCount');
+        return { t, ws, rg };
+      });
+      await ctx.sync();
+      its.forEach(it => {
+        if (it.rg.isNullObject) throw new Error('El rango «' + it.t + '» no tiene datos.');
+        if (it.rg.rowCount * it.rg.columnCount > MAX_CELLS) throw new Error('El rango «' + it.t + '» es demasiado grande (máximo ' + fmt(MAX_CELLS) + ' celdas).');
+        it.rg.load('values');
+      });
+      await ctx.sync();
+      return its.map(it => ({ sheet: it.ws.name, rowIndex: it.rg.rowIndex, columnIndex: it.rg.columnIndex, rowCount: it.rg.rowCount, columnCount: it.rg.columnCount, values: it.rg.values }));
+    });
+  },
+  async readBlock(g, R, C){
+    return Excel.run(async ctx => {
+      const rg = ctx.workbook.worksheets.getItem(g.sheet).getRangeByIndexes(g.rowIndex, g.columnIndex, R, C);
+      rg.load('values'); await ctx.sync();
+      return Object.assign({}, g, { rowCount: R, columnCount: C, values: rg.values });
+    });
+  },
+  async addRule(g, formula, kind, colors){
+    return Excel.run(async ctx => {
+      const rg = ctx.workbook.worksheets.getItem(g.sheet).getRangeByIndexes(g.rowIndex, g.columnIndex, g.rowCount, g.columnCount);
+      await removePanelRules(ctx, rg, kind === 'dup' ? /ph_dup/ : /ph_cmp/);
+      const cf = rg.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+      cf.custom.rule.formula = formula;
+      cf.custom.format.fill.color = colors.fill;
+      cf.custom.format.font.color = colors.font;
+      await ctx.sync();
+    });
+  },
+  async clearRules(scope){
+    return Excel.run(async ctx => {
+      let sheets;
+      if (scope === 'book'){ const col = ctx.workbook.worksheets; col.load('items/name'); await ctx.sync(); sheets = col.items; }
+      else sheets = [ctx.workbook.worksheets.getActiveWorksheet()];
+      let n = 0;
+      for (const ws of sheets) n += await removePanelRules(ctx, ws.getRange(), /ph_(cmp|dup)/);
+      return n;
+    });
+  },
+  async registerEvents(on){
+    await Excel.run(async ctx => {
+      const col = ctx.workbook.worksheets;
+      col.onActivated.add(on.activated);
+      col.onAdded.add(on.changed);
+      col.onDeleted.add(on.changed);
+      await ctx.sync();
+    });
+    if (this.supports('1.17')){
+      try {
+        await Excel.run(async ctx => {
+          const col = ctx.workbook.worksheets;
+          col.onNameChanged.add(on.changed);
+          col.onVisibilityChanged.add(on.changed);
+          col.onMoved.add(on.changed);
+          await ctx.sync();
+        });
+      } catch (e) { /* versión sin estos eventos: queda el botón Actualizar */ }
+    }
+  }
+};
+
+/* ---------- capa de vista previa (fuera de Excel) ---------- */
+function makeMockApi(){
+  const base = [
+    ['INSTALACIÓN CAÑERÍAS', '#FFFF00', 323, []],
+    ['Hoja1', '', 450, []],
+    ['planta', '', 0, []],
+    ['ARENA TUBERIA', '', 10, ['INSTALACIÓN CAÑERÍAS']],
+    ['HDPE', '#FFFF00', 96, ['INSTALACIÓN CAÑERÍAS']],
+    ['RESUMEN PRUEBAS', '', 25, ['INSTALACIÓN CAÑERÍAS']],
+    ['ESTADO AVANCE', '', 85, ['INSTALACIÓN CAÑERÍAS', 'HDPE']],
+    ['CRISTIAN VASQUEZ DISTRIB', '#00FFFF', 117, ['INSTALACIÓN CAÑERÍAS']]
+  ];
+  const S = base.map((b, i) => ({ id: 'm' + i, name: b[0], position: i, visibility: 'Visible', tabColor: b[1], protected: false, _n: b[2], _deps: b[3] }));
+  let active = 'm0', seq = S.length, rules = 0;
+  const on = {};
+  const fire = (k, a) => setTimeout(() => on[k] && on[k](a || {}), 0);
+  const get = id => { const s = S.find(x => x.id === id || lc(x.name) === lc(id)); if (!s) throw new Error('No se encontró la hoja.'); return s; };
+  const pack = () => ({ activeId: active, sheets: S.slice().sort((a, b) => a.position - b.position).map(s => ({ id: s.id, name: s.name, position: s.position, visibility: s.visibility, tabColor: s.tabColor, protected: s.protected })) });
+  const renumber = () => S.sort((a, b) => a.position - b.position).forEach((s, i) => { s.position = i; });
+  const wait = (v) => new Promise(r => setTimeout(() => r(v), 40));
+  return {
+    async workbookName(){ return 'N23 viernes 23-10-2026.xlsx'; },
+    async listSheets(){ return wait(pack()); },
+    async activate(id){ const s = get(id); if (s.visibility !== 'Visible') throw new Error('No se puede activar una hoja oculta.'); active = s.id; fire('activated', { worksheetId: s.id }); },
+    async rename(id, name){ get(id).name = name; fire('changed'); },
+    async setVisible(id, v){ const s = get(id); s.visibility = v ? 'Visible' : 'Hidden'; if (!v && active === s.id){ const n = S.find(x => x.visibility === 'Visible'); active = n.id; } fire('changed'); },
+    async setTabColor(id, c){ get(id).tabColor = c || ''; },
+    async setProtected(id, v){ get(id).protected = v; },
+    async move(id, pos){ const s = get(id); S.forEach(x => { if (x !== s){ if (s.position < pos && x.position > s.position && x.position <= pos) x.position--; if (s.position > pos && x.position < s.position && x.position >= pos) x.position++; } }); s.position = pos; renumber(); fire('changed'); },
+    async remove(id){ const s = get(id); S.splice(S.indexOf(s), 1); renumber(); if (active === s.id) active = S.find(x => x.visibility === 'Visible').id; fire('changed'); },
+    canDuplicate(){ return true; },
+    async duplicate(id){ const s = get(id); let k = 2; while (S.some(x => lc(x.name) === lc(s.name + ' (' + k + ')'))) k++; const c = Object.assign({}, s, { id: 'm' + (seq++), name: s.name + ' (' + k + ')', position: s.position + 0.5 }); S.push(c); renumber(); active = c.id; fire('changed'); return c.id; },
+    async add(name){ const c = { id: 'm' + (seq++), name, position: S.length, visibility: 'Visible', tabColor: '', protected: false, _n: 0, _deps: [] }; S.push(c); active = c.id; fire('changed'); return c.id; },
+    async goto(sheet){ await this.activate(sheet); },
+    async readFormulas(id, onChunk){
+      const s = get(id); const rows = [];
+      for (let i = 0; i < s._n; i++){
+        const dep = s._deps.length && i % 3 === 0 ? s._deps[i % s._deps.length] : null;
+        const ref = dep ? (/^[\p{L}\p{N}_.]+$/u.test(dep) ? dep : "'" + dep.replace(/'/g, "''") + "'") + '!C' + (i + 5) : 'C' + (i + 2);
+        rows.push([i + 1, 'Tramo ' + (i + 1), dep ? '=' + ref : '=' + ref + '*2']);
+      }
+      await wait(); if (rows.length) onChunk(rows, 4, 0);
+    },
+    async getSelectionAreas(){
+      return [
+        { address: "'INSTALACIÓN CAÑERÍAS'!E5:E24", rowCount: 20, columnCount: 1, split: null },
+        { address: 'HDPE!C5:C24', rowCount: 20, columnCount: 1, split: null }
+      ];
+    },
+    async resolveRanges(texts){
+      return texts.map(t => {
+        const p = parseAddr(t);
+        const sh = p.sheet ? get(p.sheet).name : S.find(x => x.id === active).name;
+        const g = mockGeom(p.cells); if (!g) throw new Error('El rango «' + t + '» no es válido en la vista previa.');
+        return Object.assign(g, { sheet: sh, values: mockGrid(sh, g.rowIndex, g.columnIndex, g.rowCount, g.columnCount) });
+      });
+    },
+    async readBlock(g, R, C){ return Object.assign({}, g, { rowCount: R, columnCount: C, values: mockGrid(g.sheet, g.rowIndex, g.columnIndex, R, C) }); },
+    async addRule(){ rules++; },
+    async clearRules(){ const n = rules; rules = 0; return n; },
+    async registerEvents(h){ on.activated = h.activated; on.changed = h.changed; }
+  };
+  function mockGeom(cells){
+    const m = /^([A-Z]{1,3})(\d+)(?::([A-Z]{1,3})(\d+))?$/i.exec(cells.replace(/\$/g, ''));
+    if (!m) return null;
+    const ci = x => x.toUpperCase().split('').reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1;
+    const c1 = ci(m[1]), r1 = +m[2] - 1, c2 = m[3] ? ci(m[3]) : c1, r2 = m[4] ? +m[4] - 1 : r1;
+    return { rowIndex: Math.min(r1, r2), columnIndex: Math.min(c1, c2), rowCount: Math.abs(r2 - r1) + 1, columnCount: Math.abs(c2 - c1) + 1 };
+  }
+  function mockGrid(sheet, r0, c0, R, C){
+    const base = [120.5, 98, 210, 75.25, 300, 64, 150, 98, 180.5, 45, 210, 132];
+    const out = [];
+    for (let i = 0; i < R; i++){
+      const row = []; const r = r0 + i;
+      for (let j = 0; j < C; j++){
+        let v = r > 60 ? '' : base[r % base.length];
+        if (v !== '' && lc(sheet) === 'hdpe' && r % 7 === 3) v = Math.round((v - 2.5) * 100) / 100;
+        row.push(v);
+      }
+      out.push(row);
+    }
+    return out;
+  }
+}
+
+/* ---------- avisos y diálogos ---------- */
+let toastTimer = null;
+function toast(msg, isErr){
+  const t = $('#toast'); t.textContent = msg; t.classList.toggle('err', !!isErr); t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), isErr ? 4500 : 2600);
+}
+function friendly(e){
+  const code = e && (e.code || (e.debugInfo && e.debugInfo.code)) || '';
+  const msg = (e && e.message) || String(e);
+  if (/CellEditMode/i.test(code + msg)) return 'Excel está editando una celda. Presiona Intro o Esc y vuelve a intentarlo.';
+  if (/ItemAlreadyExists/i.test(code)) return 'Ya existe una hoja con ese nombre.';
+  if (/password|contraseña/i.test(msg)) return 'La hoja tiene contraseña. Desprotégela desde Revisar > Desproteger hoja.';
+  if (/AccessDenied/i.test(code)) return 'Excel no permitió el cambio (libro o hoja protegidos).';
+  if (/ItemNotFound/i.test(code)) return 'No se encontró la hoja o el rango indicado.';
+  return msg;
+}
+function showError(e){ console.error(e); toast(friendly(e), true); }
+
+function dialog({ title, body, ok = 'Aceptar', cancel = 'Cancelar', danger = false }){
+  return new Promise(resolve => {
+    closeMenu();
+    const back = h('div', 'modal-back');
+    const box = h('div', 'modal'); box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
+    const hd = h('h3', null, title); const bd = h('div', 'body');
+    if (typeof body === 'string') bd.append(h('p', null, body)); else bd.append(body);
+    const act = h('div', 'actions');
+    const bOk = h('button', 'btn ' + (danger ? 'danger' : 'primary'), ok);
+    let bNo = null;
+    if (cancel){ bNo = h('button', 'btn', cancel); act.append(bNo); }
+    act.append(bOk);
+    box.append(hd, bd, act); back.append(box); document.body.append(back);
+    const prev = document.activeElement;
+    const done = v => { back.remove(); document.removeEventListener('keydown', key, true); if (prev && prev.focus) prev.focus(); resolve(v); };
+    const key = e => { if (e.key === 'Escape'){ e.preventDefault(); done(false); } else if (e.key === 'Enter' && document.activeElement !== bNo){ e.preventDefault(); done(true); } };
+    document.addEventListener('keydown', key, true);
+    bOk.onclick = () => done(true); if (bNo) bNo.onclick = () => done(false);
+    back.addEventListener('mousedown', e => { if (e.target === back) done(false); });
+    (danger && bNo ? bNo : bOk).focus();
+  });
+}
+
+/* ---------- menús ---------- */
+let menuEl = null, menuReturn = null;
+function closeMenu(){
+  if (!menuEl) return;
+  menuEl.remove(); menuEl = null;
+  document.removeEventListener('mousedown', onDocDown, true);
+  if (menuReturn && menuReturn.focus) menuReturn.focus({ preventScroll: true });
+  menuReturn = null;
+}
+function onDocDown(e){ if (menuEl && !menuEl.contains(e.target)) closeMenu(); }
+function openMenu(items, x, y, returnFocus){
+  closeMenu();
+  const m = h('div', 'menu'); m.setAttribute('role', 'menu');
+  for (const it of items){
+    if (!it) continue;
+    if (it === '-'){ m.append(h('div', 'msep')); continue; }
+    if (it.type === 'label'){ m.append(h('div', 'mlabel', it.label)); continue; }
+    if (it.type === 'swatches'){
+      const g = h('div', 'swatches');
+      for (const c of TAB_COLORS){
+        const b = h('button', 'sw'); b.style.background = c; b.title = 'Color ' + c; b.setAttribute('aria-label', 'Color ' + c);
+        b.onclick = () => { closeMenu(); it.pick(c); }; g.append(b);
+      }
+      m.append(g); continue;
+    }
+    const b = h('button', 'mi' + (it.danger ? ' danger' : '')); b.setAttribute('role', 'menuitem'); b.disabled = !!it.disabled;
+    b.append(h('span', 'chk', it.checked ? '✓' : (it.dot ? '●' : '')), h('span', null, it.label));
+    if (it.hint) b.append(h('span', 'hint', it.hint));
+    b.onclick = () => { closeMenu(); if (it.action) it.action(); };
+    m.append(b);
+  }
+  document.body.append(m);
+  const r = m.getBoundingClientRect();
+  m.style.left = Math.max(2, Math.min(x, innerWidth - r.width - 2)) + 'px';
+  m.style.top = Math.max(2, Math.min(y, innerHeight - r.height - 2)) + 'px';
+  menuEl = m; menuReturn = returnFocus || null;
+  m.addEventListener('keydown', e => {
+    const opts = $$('.mi:not(:disabled), .sw', m); const i = opts.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown'){ e.preventDefault(); (opts[i + 1] || opts[0]).focus(); }
+    else if (e.key === 'ArrowUp'){ e.preventDefault(); (opts[i - 1] || opts[opts.length - 1]).focus(); }
+    else if (e.key === 'Escape' || e.key === 'Tab'){ e.preventDefault(); closeMenu(); }
+  });
+  const first = $('.mi:not(:disabled)', m); if (first) first.focus({ preventScroll: true });
+  setTimeout(() => document.addEventListener('mousedown', onDocDown, true), 0);
+}
+function menuBelow(btn, items){ const r = btn.getBoundingClientRect(); openMenu(items, r.left, r.bottom + 1, btn); }
+
+/* ---------- lista de hojas ---------- */
+function orderedSheets(applyFilter){
+  let list = state.sheets.slice();
+  if (!prefs.showHidden) list = list.filter(s => s.visibility === 'Visible' || s.id === state.renamingId);
+  if (applyFilter && state.filterOn && state.filterText.trim()){
+    const q = norm(state.filterText.trim()); list = list.filter(s => norm(s.name).includes(q));
+  }
+  const cmp = (a, b) => a.name.localeCompare(b.name, 'es', { numeric: true, sensitivity: 'base' });
+  if (prefs.sort === 'az') list.sort(cmp);
+  else if (prefs.sort === 'za') list.sort((a, b) => cmp(b, a));
+  else list.sort((a, b) => a.position - b.position);
+  return list;
+}
+
+function sheetRow(s){
+  const li = h('li', 'row'); li.dataset.id = s.id; li.setAttribute('role', 'option');
+  li.setAttribute('aria-selected', String(s.id === state.activeId));
+  if (s.id === state.activeId) li.classList.add('active');
+  if (s.visibility !== 'Visible') li.classList.add('is-hidden');
+  const sq = h('span', 'sq'); if (prefs.showColor && s.tabColor) sq.style.background = s.tabColor;
+  li.append(sq, h('span', 'nm', s.name));
+  if (s.visibility === 'Hidden') li.append(h('span', 'tag', 'oculta'));
+  if (s.visibility === 'VeryHidden') li.append(h('span', 'tag', 'muy oculta'));
+  if (s.protected){ const l = icon('i-minilock', 'mini'); l.setAttribute('aria-label', 'protegida'); li.append(l); }
+  li.title = s.name + (s.protected ? ' (protegida)' : '');
+  return li;
+}
+
+function renderSheets(){
+  if (state.renamingId){ state.pendingRender = true; return; }
+  const ul = $('#sheetList'); const top = ul.scrollTop; ul.textContent = '';
+  const list = orderedSheets(true);
+  if (!list.length){
+    ul.append(h('li', 'empty', state.sheets.length ? 'Ninguna hoja coincide con el filtro.' : 'Cargando hojas…'));
+  } else {
+    for (const s of list){ const li = sheetRow(s); if (s.id === state.kbdId) li.classList.add('kbd'); ul.append(li); }
+  }
+  ul.scrollTop = top;
+  $('#wbName').textContent = state.wbName || 'Libro actual';
+  $('#wbCount').textContent = state.sheets.length ? plural(state.sheets.length, 'hoja', 'hojas') : '';
+  const hidden = state.sheets.length - visibleCount();
+  const st = $('#status'); st.textContent = '';
+  if (state.demo){ st.append(h('span', 'demo', 'Vista previa con datos de ejemplo. ')); }
+  let txt = plural(visibleCount(), 'hoja visible', 'hojas visibles');
+  if (hidden) txt += ', ' + plural(hidden, 'oculta', 'ocultas');
+  if (state.filterOn && state.filterText.trim()) txt += ', mostrando ' + fmt(list.length);
+  st.append(document.createTextNode(txt));
+  $('[data-act="sortAZ"]').setAttribute('aria-pressed', String(prefs.sort === 'az'));
+  $('[data-act="sortZA"]').setAttribute('aria-pressed', String(prefs.sort === 'za'));
+  $('[data-act="toggleHidden"]').setAttribute('aria-pressed', String(prefs.showHidden));
+  $('[data-act="unhideAll"]').disabled = !state.sheets.some(s => s.visibility === 'Hidden');
+  const act = sheetById(state.activeId);
+  $('[data-act="protectActive"]').title = act && act.protected ? 'Desproteger la hoja activa' : 'Proteger la hoja activa';
+}
+
+function setActive(id){
+  state.activeId = id;
+  $$('#sheetList .row').forEach(r => { const on = r.dataset.id === id; r.classList.toggle('active', on); r.setAttribute('aria-selected', String(on)); });
+  const r = $('#sheetList .row[data-id="' + CSS.escape(id) + '"]'); if (r) r.scrollIntoView({ block: 'nearest' });
+}
+
+async function activateSheet(id){
+  const s = sheetById(id); if (!s) return;
+  if (s.visibility !== 'Visible'){ toast('La hoja «' + s.name + '» está oculta. Usa clic derecho > Mostrar.'); return; }
+  setActive(id);
+  try { await state.api.activate(id); } catch (e) { showError(e); }
+}
+
+/* ---------- acciones ---------- */
+function validName(v, selfId){
+  if (!v) return 'Escribe un nombre.';
+  if (v.length > 31) return 'El nombre puede tener máximo 31 caracteres.';
+  if (/[:\\/?*\[\]]/.test(v)) return 'El nombre no puede llevar : \\ / ? * [ ]';
+  if (/^'|'$/.test(v)) return 'El nombre no puede empezar ni terminar con apóstrofo.';
+  if (state.sheets.some(s => s.id !== selfId && lc(s.name) === lc(v))) return 'Ya existe una hoja con ese nombre.';
+  return '';
+}
+
+function startRename(id){
+  const s = sheetById(id); if (!s) return;
+  if (s.visibility !== 'Visible' && !prefs.showHidden) return;
+  renderSheets();
+  const li = $('#sheetList .row[data-id="' + CSS.escape(id) + '"]'); if (!li) return;
+  state.renamingId = id;
+  const nm = $('.nm', li); const inp = h('input', 'ren'); inp.value = s.name; inp.maxLength = 31; inp.setAttribute('aria-label', 'Nuevo nombre');
+  nm.replaceWith(inp); inp.focus(); inp.select();
+  let done = false;
+  const finish = async ok => {
+    if (done) return; done = true;
+    const v = inp.value.trim();
+    state.renamingId = null;
+    if (ok && v && v !== s.name){
+      const err = validName(v, id);
+      if (err) toast(err, true);
+      else { try { await state.api.rename(id, v); toast('Hoja renombrada.'); } catch (e) { showError(e); } }
+    }
+    state.pendingRender = false; await reloadSheets(); $('#sheetList').focus();
+  };
+  inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter'){ e.preventDefault(); finish(true); } else if (e.key === 'Escape'){ e.preventDefault(); finish(false); } });
+  inp.addEventListener('blur', () => finish(true));
+  inp.addEventListener('mousedown', e => e.stopPropagation());
+  inp.addEventListener('click', e => e.stopPropagation());
+  inp.addEventListener('dblclick', e => e.stopPropagation());
+}
+
+async function setVisible(id, on){
+  const s = sheetById(id); if (!s) return;
+  if (!on && s.visibility === 'Visible' && visibleCount() <= 1){ toast('Debe quedar al menos una hoja visible.', true); return; }
+  try { await state.api.setVisible(id, on); await reloadSheets(); toast(on ? 'Hoja visible.' : 'Hoja oculta.'); } catch (e) { showError(e); }
+}
+
+async function unhideAll(){
+  const hidden = state.sheets.filter(s => s.visibility === 'Hidden');
+  if (!hidden.length){ toast('No hay hojas ocultas.'); return; }
+  try { for (const s of hidden) await state.api.setVisible(s.id, true); await reloadSheets(); toast('Se mostraron ' + plural(hidden.length, 'hoja', 'hojas') + '.'); }
+  catch (e) { showError(e); reloadSheets(); }
+}
+
+async function toggleProtect(id){
+  const s = sheetById(id); if (!s) return;
+  const on = !s.protected;
+  if (on && !(await dialog({ title: 'Proteger hoja', body: 'Al proteger «' + s.name + '» no podrás escribir en sus celdas hasta desprotegerla. ¿Continuar?', ok: 'Proteger' }))) return;
+  try { await state.api.setProtected(id, on); await reloadSheets(); toast(on ? 'Hoja protegida (sin contraseña).' : 'Hoja desprotegida.'); }
+  catch (e) { showError(e); }
+}
+
+async function setColor(id, c){
+  try { await state.api.setTabColor(id, c); await reloadSheets(); }
+  catch (e) { showError(e); }
+}
+
+async function moveSheet(id, where){
+  const s = sheetById(id); if (!s) return;
+  const n = state.sheets.length;
+  const pos = where === 'first' ? 0 : where === 'last' ? n - 1 : where === 'up' ? Math.max(0, s.position - 1) : Math.min(n - 1, s.position + 1);
+  if (pos === s.position) return;
+  try { await state.api.move(id, pos); await reloadSheets(); } catch (e) { showError(e); }
+}
+
+async function duplicateSheet(id){
+  try { await state.api.duplicate(id); await reloadSheets(); markStale(); toast('Hoja duplicada.'); } catch (e) { showError(e); }
+}
+
+async function addSheet(){
+  let k = state.sheets.length + 1; while (sheetByName('Hoja' + k)) k++;
+  try { const nid = await state.api.add('Hoja' + k); await reloadSheets(); markStale(); state.activeId = nid; renderSheets(); startRename(nid); }
+  catch (e) { showError(e); }
+}
+
+async function deleteSheet(id){
+  const s = sheetById(id); if (!s) return;
+  if (s.visibility === 'Visible' && visibleCount() <= 1){ toast('No se puede eliminar la única hoja visible.', true); return; }
+  const ok = await dialog({ title: 'Eliminar hoja', body: '¿Eliminar la hoja «' + s.name + '»? Puede que Excel no permita deshacer este cambio.', ok: 'Eliminar', danger: true });
+  if (!ok) return;
+  try { await state.api.remove(id); await reloadSheets(); markStale(); toast('Hoja eliminada.'); } catch (e) { showError(e); }
+}
+
+function sheetMenuItems(s){
+  const hidden = s.visibility !== 'Visible';
+  const byPos = prefs.sort === 'pos';
+  return [
+    { label: 'Ir a la hoja', hint: 'Intro', disabled: hidden, action: () => activateSheet(s.id) },
+    { label: 'Cambiar nombre', hint: 'F2', disabled: hidden && !prefs.showHidden, action: () => startRename(s.id) },
+    '-',
+    { type: 'label', label: 'Color de pestaña' },
+    { type: 'swatches', pick: c => setColor(s.id, c) },
+    { label: 'Sin color', disabled: !s.tabColor, action: () => setColor(s.id, '') },
+    '-',
+    hidden ? { label: 'Mostrar', action: () => setVisible(s.id, true) } : { label: 'Ocultar', action: () => setVisible(s.id, false) },
+    { label: s.protected ? 'Desproteger' : 'Proteger', action: () => toggleProtect(s.id) },
+    '-',
+    { label: 'Mover al inicio', disabled: !byPos || s.position === 0, action: () => moveSheet(s.id, 'first') },
+    { label: 'Mover arriba', disabled: !byPos || s.position === 0, action: () => moveSheet(s.id, 'up') },
+    { label: 'Mover abajo', disabled: !byPos || s.position === state.sheets.length - 1, action: () => moveSheet(s.id, 'down') },
+    { label: 'Mover al final', disabled: !byPos || s.position === state.sheets.length - 1, action: () => moveSheet(s.id, 'last') },
+    '-',
+    state.api.canDuplicate() ? { label: 'Duplicar', action: () => duplicateSheet(s.id) } : null,
+    { label: 'Eliminar…', danger: true, action: () => deleteSheet(s.id) }
+  ];
+}
+
+function viewMenu(btn){
+  menuBelow(btn, [
+    { type: 'label', label: 'Orden de la lista' },
+    { label: 'Como en el libro', dot: prefs.sort === 'pos', action: () => setSort('pos') },
+    { label: 'De A a Z', dot: prefs.sort === 'az', action: () => setSort('az') },
+    { label: 'De Z a A', dot: prefs.sort === 'za', action: () => setSort('za') },
+    '-',
+    { label: 'Ver hojas ocultas', checked: prefs.showHidden, action: () => { prefs.showHidden = !prefs.showHidden; savePrefs(); renderAll(); } },
+    { label: 'Ver color de pestaña', checked: prefs.showColor, action: () => { prefs.showColor = !prefs.showColor; savePrefs(); renderAll(); } },
+    { label: 'Letra más grande', checked: prefs.big, action: () => { prefs.big = !prefs.big; savePrefs(); document.body.classList.toggle('big', prefs.big); } }
+  ]);
+}
+
+function sheetActionsMenu(btn){
+  const a = sheetById(state.activeId);
+  menuBelow(btn, [
+    { label: 'Insertar hoja nueva', action: addSheet },
+    a && state.api.canDuplicate() ? { label: 'Duplicar hoja activa', action: () => duplicateSheet(a.id) } : null,
+    a ? { label: 'Cambiar nombre de la hoja activa', action: () => startRename(a.id) } : null,
+    '-',
+    { label: 'Mostrar todas las hojas ocultas', disabled: !state.sheets.some(s => s.visibility === 'Hidden'), action: unhideAll },
+    a ? { label: a.protected ? 'Desproteger hoja activa' : 'Proteger hoja activa', action: () => toggleProtect(a.id) } : null,
+    '-',
+    a ? { label: 'Eliminar hoja activa…', danger: true, action: () => deleteSheet(a.id) } : null
+  ]);
+}
+
+function setSort(mode){ prefs.sort = (prefs.sort === mode && mode !== 'pos') ? 'pos' : mode; savePrefs(); renderAll(); }
+
+function helpDialog(){
+  const body = h('div');
+  const p = h('p', null, 'Este panel lista las hojas del libro abierto, muestra qué hojas usan datos de otras y compara rangos.');
+  const ul = h('ul');
+  [
+    'Clic en una hoja para ir a ella. Doble clic o F2 para cambiar su nombre.',
+    'Clic derecho (o Ctrl+clic) abre el menú de la hoja: color, ocultar, proteger, mover, duplicar y eliminar.',
+    'Con el teclado: flechas para moverte en la lista e Intro para ir a la hoja.',
+    'Marca Filtro y escribe parte del nombre; no importan las tildes ni mayúsculas.',
+    'Si cambias colores de pestaña desde Excel, pulsa Actualizar para verlos aquí.',
+    'Dependencias lee las fórmulas de cada hoja. No detecta referencias armadas con INDIRECTO ni las que pasan por nombres definidos.',
+    'Comparar: elige dos columnas o filas y las celdas que no coinciden se pintan en rojo. Puedes comparar celda por celda o buscar cada valor en el otro rango.',
+    'Duplicados: pinta en verde los valores que se repiten dentro del rango.',
+    'Los colores son formato condicional: se actualizan solos y el borrador quita solo los que puso el panel, sin tocar tus otros formatos.'
+  ].forEach(t => ul.append(h('li', null, t)));
+  body.append(p, ul);
+  dialog({ title: 'Ayuda del panel', body, ok: 'Entendido', cancel: null });
+}
+
+/* ---------- carga ---------- */
+let reloadTimer = null;
+function scheduleReload(){ clearTimeout(reloadTimer); reloadTimer = setTimeout(reloadSheets, 180); }
+function sig(list){ return list.map(s => lc(s.name)).sort().join('|'); }
+function markStale(){ if (state.analysis) { state.analysisStale = sig(state.sheets) !== state.analysisSig; } }
+
+async function reloadSheets(){
+  try {
+    const r = await state.api.listSheets();
+    state.sheets = r.sheets; state.activeId = r.activeId;
+    if (!sheetById(state.depSel)) state.depSel = r.activeId;
+    markStale();
+    renderAll();
+  } catch (e) { showError(e); }
+}
+async function reloadAll(){
+  try { state.wbName = await state.api.workbookName(); } catch (e) { state.wbName = 'Libro actual'; }
+  await reloadSheets();
+}
+function renderAll(){ renderSheets(); if (state.pane === 'deps') renderDeps(); }
+
+function onActivated(args){
+  const id = args && args.worksheetId; if (!id) return;
+  if (!sheetById(id)) { scheduleReload(); return; }
+  setActive(id);
+  if (state.pane === 'deps'){ state.depSel = id; renderDeps(); }
+  else state.depSel = id;
+}
+
+/* ---------- dependencias ---------- */
+const RE_STR = /"(?:[^"]|"")*"/g;
+const RE_EXT = /(?:'[^']*\[[^\]]*\][^']*'|\[[^\]]+\][\p{L}\p{N}_.]+)!/gu;
+const RE_REF = /(?:'((?:[^']|'')+)'|([\p{L}\p{N}_.]+(?::[\p{L}\p{N}_.]+)?))!/gu;
+
+function scanFormula(f, addr, entry, known, order, self){
+  if (f.indexOf('#REF!') >= 0) entry.refErr.push({ a: addr, f });
+  let g = f.replace(RE_STR, '""');
+  if (g.indexOf('[') >= 0){
+    let ext = false; g = g.replace(RE_EXT, () => { ext = true; return ' '; });
+    if (ext) entry.ext.push({ a: addr, f });
+  }
+  g = g.replace(/#REF!/g, ' ');
+  RE_REF.lastIndex = 0;
+  const seen = new Set(); let m;
+  while ((m = RE_REF.exec(g))){
+    const raw = m[1] != null ? m[1].replace(/''/g, "'") : m[2];
+    const parts = raw.split(':').map(lc);
+    let targets = [lc(raw)];
+    if (parts.length === 2){ const i = order.indexOf(parts[0]), j = order.indexOf(parts[1]); if (i >= 0 && j >= 0) targets = order.slice(Math.min(i, j), Math.max(i, j) + 1); }
+    for (const t of targets){
+      if (t === self || seen.has(t) || !known.has(t)) continue;
+      seen.add(t);
+      let arr = entry.out.get(t); if (!arr) entry.out.set(t, arr = []);
+      arr.push({ a: addr, f });
+    }
+  }
+}
+
+async function analyze(){
+  if (state.analyzing) return;
+  if (!state.sheets.length) await reloadSheets();
+  state.analyzing = true; renderDeps();
+  const sheets = state.sheets.slice().sort((a, b) => a.position - b.position);
+  const order = sheets.map(s => lc(s.name));
+  const known = new Set(order);
+  const res = new Map();
+  const bar = $('#depProgress');
+  let i = 0;
+  for (const s of sheets){
+    bar.style.width = Math.round(i / sheets.length * 100) + '%';
+    $('#depStatus').textContent = 'Leyendo «' + s.name + '»…';
+    const e = { id: s.id, name: s.name, formulas: 0, out: new Map(), refErr: [], ext: [], error: '' };
+    res.set(lc(s.name), e);
+    try {
+      await state.api.readFormulas(s.id, (rows, r0, c0) => {
+        for (let r = 0; r < rows.length; r++){
+          const row = rows[r];
+          for (let c = 0; c < row.length; c++){
+            const f = row[c];
+            if (typeof f !== 'string' || f.charCodeAt(0) !== 61) continue;
+            e.formulas++;
+            scanFormula(f, cellAddr(r0 + r, c0 + c), e, known, order, lc(s.name));
+          }
+        }
+      });
+    } catch (err) { e.error = friendly(err); }
+    i++;
+  }
+  const usedBy = new Map();
+  for (const [src, e] of res){
+    for (const [t, cells] of e.out){
+      let arr = usedBy.get(t); if (!arr) usedBy.set(t, arr = []);
+      arr.push({ src, cells });
+    }
+  }
+  state.analysis = { time: new Date(), res, usedBy };
+  state.analysisSig = sig(state.sheets);
+  state.analysisStale = false;
+  state.analyzing = false;
+  bar.style.width = '100%'; setTimeout(() => { bar.style.width = '0'; }, 500);
+  renderDeps();
+}
+
+function depEntryFor(s){ return state.analysis ? state.analysis.res.get(lc(s.name)) : null; }
+
+function renderDeps(){
+  const A = state.analysis;
+  $('#depStale').hidden = !(A && state.analysisStale) || state.analyzing;
+  $('[data-act="analyze"]').disabled = state.analyzing;
+  $('#depWhen').textContent = A ? 'analizado ' + A.time.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '';
+
+  const sum = $('#depSummary'); sum.textContent = '';
+  let tf = 0, tr = 0, te = 0;
+  if (A) for (const e of A.res.values()){ tf += e.formulas; tr += e.refErr.length; te += e.ext.length; }
+  const stat = (n, label, warn) => { const d = h('div', 'stat' + (warn && n ? ' warn' : '')); d.append(h('b', null, A ? fmt(n) : '–'), h('span', null, label)); return d; };
+  sum.append(stat(tf, 'fórmulas'), stat(tr, 'celdas con #REF!', true), stat(te, 'vínculos a otros libros', true));
+
+  const ul = $('#depList'); const top = ul.scrollTop; ul.textContent = '';
+  const list = orderedSheets(false).concat(prefs.showHidden ? [] : state.sheets.filter(s => s.visibility !== 'Visible'));
+  if (!A && !state.analyzing){
+    const li = h('li', 'empty'); li.append(h('div', null, 'Revisa qué hojas toman datos de otras y dónde hay #REF!.'));
+    const b = h('button', 'tb text'); b.append(icon('i-sync'), h('span', null, 'Analizar fórmulas')); b.onclick = analyze; li.append(b);
+    ul.append(li);
+  } else {
+    for (const s of list){
+      const li = sheetRow(s); li.classList.remove('active'); li.setAttribute('aria-selected', String(s.id === state.depSel));
+      if (s.id === state.depSel) li.classList.add('picked');
+      if (s.id === state.depKbdId) li.classList.add('kbd');
+      const e = depEntryFor(s);
+      if (e){
+        const used = (A.usedBy.get(lc(s.name)) || []).length;
+        const p = h('span', 'pills');
+        const p1 = h('span', 'pill ' + (e.out.size ? 'dep' : 'zero'), String(e.out.size)); p1.title = 'Depende de ' + plural(e.out.size, 'hoja', 'hojas');
+        const p2 = h('span', 'pill ' + (used ? 'use' : 'zero'), String(used)); p2.title = 'Usada por ' + plural(used, 'hoja', 'hojas');
+        p.append(p1, p2); li.append(p);
+      }
+      ul.append(li);
+    }
+  }
+  ul.scrollTop = top;
+  renderDepDetail();
+
+  const st = $('#depStatus');
+  if (state.analyzing) return;
+  st.textContent = '';
+  if (state.demo) st.append(h('span', 'demo', 'Vista previa con datos de ejemplo. '));
+  st.append(document.createTextNode(A ? 'Doble clic en una hoja para ir a ella.' : 'Aún no se analizan las fórmulas.'));
+}
+
+function chipList(cells, sheetName){
+  const box = h('div', 'chips'); const MAX = 150;
+  cells.slice(0, MAX).forEach(c => {
+    const b = h('button', 'chip', c.a); b.title = c.f.length > 300 ? c.f.slice(0, 300) + '…' : c.f;
+    b.onclick = async () => { try { await state.api.goto(sheetName, c.a); } catch (e) { showError(e); } };
+    box.append(b);
+  });
+  if (cells.length > MAX) box.append(h('span', 'more', 'y ' + fmt(cells.length - MAX) + ' más'));
+  return box;
+}
+
+function depGroup(name, cells, cellSheet, onName){
+  const d = h('details', 'dl'); const s = h('summary');
+  let label;
+  if (onName){ label = h('button', 'link', name); label.title = 'Ver esta hoja en el panel'; label.onclick = e => { e.preventDefault(); e.stopPropagation(); onName(); }; }
+  else label = h('span', 'nm', name);
+  s.append(h('span', 'caret'), label, h('span', 'cnt', plural(cells.length, 'celda', 'celdas')));
+  d.append(s);
+  d.addEventListener('toggle', () => { if (d.open && d.children.length === 1) d.append(chipList(cells, cellSheet)); });
+  return d;
+}
+
+function renderDepDetail(){
+  const box = $('#depDetail'); box.textContent = '';
+  const A = state.analysis;
+  if (state.analyzing){ box.append(h('div', 'empty', 'Leyendo fórmulas…')); return; }
+  if (!A){ box.append(h('div', 'empty', 'Pulsa Analizar para ver de qué hojas depende cada una.')); return; }
+  const s = sheetById(state.depSel) || sheetById(state.activeId);
+  if (!s){ box.append(h('div', 'empty', 'Elige una hoja de la lista.')); return; }
+  const e = depEntryFor(s);
+  const head = h('div', 'dhead'); const sq = h('span', 'sq'); if (prefs.showColor && s.tabColor) sq.style.background = s.tabColor;
+  const go = h('button', 'link', 'Ir a la hoja'); go.style.fontWeight = '400'; go.style.fontSize = '11px'; go.onclick = () => activateSheet(s.id);
+  head.append(sq, h('span', 'nm', s.name), go); box.append(head);
+  if (!e){ box.append(h('div', 'dmeta', 'Esta hoja no estaba en el último análisis.')); return; }
+  box.append(h('div', 'dmeta', e.error ? 'No se pudo leer: ' + e.error : plural(e.formulas, 'fórmula', 'fórmulas')));
+
+  const pick = name => { const t = sheetByName(name); if (t){ state.depSel = t.id; renderDeps(); const r = $('#depList .row[data-id="' + CSS.escape(t.id) + '"]'); if (r) r.scrollIntoView({ block: 'nearest' }); } };
+
+  const outs = Array.from(e.out.entries()).map(([t, cells]) => ({ name: (A.res.get(t) || {}).name || t, cells })).sort((a, b) => b.cells.length - a.cells.length);
+  box.append(h('h4', null, 'Depende de'));
+  if (!outs.length) box.append(h('div', 'none', 'No usa datos de otras hojas.'));
+  outs.forEach(o => box.append(depGroup(o.name, o.cells, s.name, () => pick(o.name))));
+
+  const ins = (A.usedBy.get(lc(s.name)) || []).map(u => ({ name: (A.res.get(u.src) || {}).name || u.src, cells: u.cells })).sort((a, b) => b.cells.length - a.cells.length);
+  box.append(h('h4', null, 'Usada por'));
+  if (!ins.length) box.append(h('div', 'none', 'Ninguna otra hoja toma datos de esta.'));
+  ins.forEach(u => box.append(depGroup(u.name, u.cells, u.name, () => pick(u.name))));
+
+  box.append(h('h4', null, 'Revisar'));
+  if (!e.refErr.length && !e.ext.length) box.append(h('div', 'none', 'Sin #REF! ni vínculos a otros libros.'));
+  if (e.refErr.length) box.append(depGroup('Fórmulas con #REF!', e.refErr, s.name, null));
+  if (e.ext.length) box.append(depGroup('Vínculos a otros libros', e.ext, s.name, null));
+}
+
+/* ---------- comparar y duplicados ---------- */
+const MAX_CELLS = 200000;
+const RED = { fill: '#FFC7CE', font: '#9C0006' };
+const GREEN = { fill: '#C6EFCE', font: '#006100' };
+
+function parseAddr(t){
+  t = String(t).trim();
+  const i = t.lastIndexOf('!');
+  if (i < 0) return { sheet: null, cells: t.replace(/\s+/g, '') };
+  let sh = t.slice(0, i).trim();
+  if (sh.length > 1 && sh[0] === "'" && sh[sh.length - 1] === "'") sh = sh.slice(1, -1).replace(/''/g, "'");
+  return { sheet: sh, cells: t.slice(i + 1).replace(/\s+/g, '') };
+}
+function isWhole(cells){ const c = cells.replace(/\$/g, ''); return /^[A-Z]{1,3}(:[A-Z]{1,3})?$/i.test(c) || /^\d+(:\d+)?$/.test(c); }
+
+async function removePanelRules(ctx, rg, re){
+  const cfs = rg.conditionalFormats; cfs.load('items/type'); await ctx.sync();
+  const cust = cfs.items.filter(c => c.type === 'Custom');
+  if (!cust.length) return 0;
+  cust.forEach(c => c.custom.rule.load('formula'));
+  await ctx.sync();
+  let n = 0;
+  cust.forEach(c => { if (re.test(c.custom.rule.formula || '')) { c.delete(); n++; } });
+  if (n) await ctx.sync();
+  return n;
+}
+
+/* Fórmulas del formato condicional. N("ph_…") vale 0 y sirve de marca para reconocer las reglas del panel. */
+const q = sheet => "'" + sheet.replace(/'/g, "''") + "'!";
+const relTL = g => colName(g.columnIndex) + (g.rowIndex + 1);
+const absRng = g => '$' + colName(g.columnIndex) + '$' + (g.rowIndex + 1) + ':$' + colName(g.columnIndex + g.columnCount - 1) + '$' + (g.rowIndex + g.rowCount);
+const refFrom = (host, target, ref) => (host.sheet === target.sheet ? '' : q(target.sheet)) + ref;
+const T = (x, o) => o.trim ? 'TRIM(' + x + ')' : '(' + x + '&"")';
+function fDiffPos(host, other, o){
+  const a = relTL(host), b = refFrom(host, other, relTL(other));
+  const txt = o.cs ? 'NOT(EXACT(' + T(a, o) + ',' + T(b, o) + '))' : T(a, o) + '<>' + T(b, o);
+  return '=AND(IF(AND(ISNUMBER(' + a + '),ISNUMBER(' + b + ')),ABS(ROUND(' + a + '-' + b + ',6))>' + o.tol + ',' + txt + '),N("ph_cmp")=0)';
+}
+function fNotIn(host, other, o){
+  const a = relTL(host), R = refFrom(host, other, absRng(other));
+  const eq = o.cs ? 'EXACT(' + T(R, o) + ',' + T(a, o) + ')' : T(R, o) + '=' + T(a, o);
+  return '=AND(' + T(a, o) + '<>"",SUMPRODUCT(--(' + eq + '))=0,N("ph_cmp")=0)';
+}
+function fDup(g, o){
+  const a = relTL(g), R = absRng(g);
+  const eq = o.cs ? 'EXACT(' + T(R, o) + ',' + T(a, o) + ')' : T(R, o) + '=' + T(a, o);
+  return '=AND(' + T(a, o) + '<>"",SUMPRODUCT(--(' + eq + '))>1,N("ph_dup")=0)';
+}
+
+/* La misma comparación en JavaScript, para el resumen del panel. */
+const xlTrim = s => s.replace(/^ +| +$/g, '').replace(/ {2,}/g, ' ');
+function toText(v){
+  if (typeof v === 'number') return String(Number(v.toPrecision(15)));
+  if (typeof v === 'boolean') return v ? 'VERDADERO' : 'FALSO';
+  return v == null ? '' : String(v);
+}
+function keyOf(v, o){ let s = toText(v); if (o.trim) s = xlTrim(s); return o.cs ? s : s.toLocaleLowerCase('es'); }
+/* Los números se comparan redondeando la diferencia a 6 decimales: así 51,1 y 220-168,9 (51,0999999999999943 internamente) cuentan como iguales. */
+function differs(a, b, o){ if (typeof a === 'number' && typeof b === 'number') return Math.round(Math.abs(a - b) * 1e6) / 1e6 > o.tol; return keyOf(a, o) !== keyOf(b, o); }
+const addrOf = (g, i, j) => cellAddr(g.rowIndex + i, g.columnIndex + j);
+const rangeLabel = g => g.sheet + '!' + absRng(g).replace(/\$/g, '');
+function dispVal(v){
+  if (v === '' || v == null) return '(vacía)';
+  if (typeof v === 'number') return v.toLocaleString('es-CL', { maximumFractionDigits: 6 });
+  if (typeof v === 'boolean') return v ? 'VERDADERO' : 'FALSO';
+  return String(v);
+}
+async function goCell(sheet, addr){ try { await state.api.goto(sheet, addr); } catch (e) { showError(e); } }
+
+function cmpOpts(){
+  const tol = Number(String($('#cmpTol').value || '0').trim().replace(',', '.'));
+  return {
+    how: ($('input[name="cmpHow"]:checked') || {}).value || 'pos',
+    paintA: $('#paintA').checked, paintB: $('#paintB').checked,
+    cs: $('#optCase').checked, trim: $('#optTrim').checked,
+    tol: isFinite(tol) && tol >= 0 ? tol : NaN
+  };
+}
+function saveCmpPrefs(){
+  const o = cmpOpts();
+  Object.assign(prefs, { how: o.how, paintA: o.paintA, paintB: o.paintB, cs: o.cs, trim: o.trim, tol: $('#cmpTol').value });
+  savePrefs();
+}
+function cmpError(e){
+  const code = e && (e.code || (e.debugInfo && e.debugInfo.code)) || '';
+  if (/InvalidArgument/i.test(code)) toast('Excel no aceptó el rango. Escríbelo como B2:B200 o HDPE!B2:B200.', true);
+  else showError(e);
+}
+
+const runLabel = () => state.cmpMode === 'dup' ? 'Marcar duplicados en verde' : 'Marcar diferencias en rojo';
+function setCmpBusy(on, label){ const b = $('#cmpRun'); b.disabled = on; b.textContent = on ? label : runLabel(); }
+
+function setCmpMode(m){
+  state.cmpMode = m;
+  const p = $('#pane-cmp'); p.dataset.mode = m;
+  $$('[data-cmpmode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cmpmode === m)));
+  const run = $('#cmpRun'); run.textContent = runLabel(); run.className = 'btn run ' + (m === 'dup' ? 'run-green' : 'run-red');
+  const box = $('#cmpResult'); box.textContent = '';
+  box.append(h('div', 'empty', m === 'dup' ? 'Elige un rango y pulsa Marcar duplicados.' : 'Elige dos columnas o filas y pulsa Marcar diferencias.'));
+  prefs.cmpMode = m; savePrefs();
+}
+
+async function pickSelection(field){
+  try {
+    const areas = await state.api.getSelectionAreas();
+    if (!areas.length) return;
+    if (field === 'rngA' && areas.length >= 2){
+      $('#rngA').value = areas[0].address; $('#rngB').value = areas[1].address;
+      toast('Se tomaron los dos rangos seleccionados.');
+    } else if (field === 'rngA' && areas[0].split){
+      $('#rngA').value = areas[0].split[0]; $('#rngB').value = areas[0].split[1];
+      toast(areas[0].columnCount === 2 ? 'Se tomaron las dos columnas de la selección.' : 'Se tomaron las dos filas de la selección.');
+    } else {
+      $('#' + field).value = areas[0].address;
+    }
+  } catch (e) { showError(e); }
+}
+
+function rowBtn(sheet, addr, parts, title){
+  const b = h('button', 'drow'); if (title) b.title = title;
+  b.append(h('span', 'ad', addr)); parts.forEach(p => b.append(p));
+  b.onclick = () => goCell(sheet, addr);
+  return b;
+}
+function cellGroup(title, sheet, cells, open){
+  const d = h('details', 'dl');
+  const s = h('summary'); s.append(h('span', 'caret'), h('span', 'nm', title), h('span', 'cnt', fmt(cells.length)));
+  d.append(s);
+  const fill = () => {
+    const list = h('div', 'dlist');
+    if (!cells.length) list.append(h('div', 'none', 'Ninguno.'));
+    cells.slice(0, 200).forEach(c => list.append(rowBtn(sheet, c.addr, [h('span', 'v', dispVal(c.v))])));
+    if (cells.length > 200) list.append(h('div', 'rnote', 'Se muestran los primeros 200.'));
+    d.append(list);
+  };
+  if (open){ d.open = true; fill(); }
+  else d.addEventListener('toggle', () => { if (d.open && d.children.length === 1) fill(); });
+  return d;
+}
+
+async function runDiff(){
+  const ta = $('#rngA').value.trim(), tb = $('#rngB').value.trim();
+  if (!ta || !tb){ toast('Indica los dos rangos. Selecciónalos en Excel y pulsa Selección.', true); return; }
+  const o = cmpOpts();
+  if (isNaN(o.tol)){ toast('La tolerancia debe ser un número igual o mayor que 0.', true); return; }
+  if (!o.paintA && !o.paintB){ toast('Marca al menos un rango para pintar.', true); return; }
+  setCmpBusy(true, 'Comparando…');
+  try {
+    let [A, B] = await state.api.resolveRanges([ta, tb]);
+    const box = $('#cmpResult'); box.textContent = '';
+    if (o.how === 'pos'){
+      const cross = (A.columnCount === 1 && B.rowCount === 1 && A.rowCount > 1 && B.columnCount > 1) ||
+                    (A.rowCount === 1 && B.columnCount === 1 && A.columnCount > 1 && B.rowCount > 1);
+      if (cross) throw new Error('Un rango es una fila y el otro una columna. Compara dos columnas o dos filas.');
+      const R = Math.max(A.rowCount, B.rowCount), C = Math.max(A.columnCount, B.columnCount);
+      const resized = A.rowCount !== B.rowCount || A.columnCount !== B.columnCount;
+      if (A.rowCount !== R || A.columnCount !== C) A = await state.api.readBlock(A, R, C);
+      if (B.rowCount !== R || B.columnCount !== C) B = await state.api.readBlock(B, R, C);
+      const diffs = [];
+      for (let i = 0; i < R; i++) for (let j = 0; j < C; j++){
+        const a = A.values[i][j], b = B.values[i][j];
+        if (differs(a, b, o)) diffs.push({ aa: addrOf(A, i, j), ab: addrOf(B, i, j), a, b });
+      }
+      if (o.paintA) await state.api.addRule(A, fDiffPos(A, B, o), 'cmp', RED);
+      if (o.paintB) await state.api.addRule(B, fDiffPos(B, A, o), 'cmp', RED);
+      const unit = C === 1 ? ['fila', 'filas'] : R === 1 ? ['columna', 'columnas'] : ['celda', 'celdas'];
+      const total = C === 1 ? R : R === 1 ? C : R * C;
+      box.append(h('div', 'rhead', diffs.length ? plural(diffs.length, 'diferencia', 'diferencias') + ' en ' + plural(total, unit[0], unit[1]) : 'Sin diferencias: los dos rangos coinciden.'));
+      box.append(h('div', 'dmeta', rangeLabel(A) + ' contra ' + rangeLabel(B)));
+      if (resized) box.append(h('div', 'rnote', 'Los rangos tenían distinto tamaño; se comparó hasta el más grande.'));
+      const list = h('div', 'dlist');
+      diffs.slice(0, 200).forEach(d => {
+        const sheet = o.paintA ? A.sheet : B.sheet, addr = o.paintA ? d.aa : d.ab;
+        list.append(rowBtn(sheet, addr, [h('span', 'v', dispVal(d.a)), h('span', 'ne', '≠'), h('span', 'v', dispVal(d.b))],
+          d.aa + ': ' + dispVal(d.a) + '   ' + d.ab + ': ' + dispVal(d.b)));
+      });
+      box.append(list);
+      if (diffs.length > 200) box.append(h('div', 'rnote', 'Se muestran las primeras 200.'));
+    } else {
+      const keys = g => { const s = new Set(); g.values.forEach(r => r.forEach(v => { const k = keyOf(v, o); if (k !== '') s.add(k); })); return s; };
+      const missing = (g, set) => { const out = []; g.values.forEach((r, i) => r.forEach((v, j) => { const k = keyOf(v, o); if (k !== '' && !set.has(k)) out.push({ addr: addrOf(g, i, j), v }); })); return out; };
+      const missA = missing(A, keys(B)), missB = missing(B, keys(A));
+      if (o.paintA) await state.api.addRule(A, fNotIn(A, B, o), 'cmp', RED);
+      if (o.paintB) await state.api.addRule(B, fNotIn(B, A, o), 'cmp', RED);
+      const n = (o.paintA ? missA.length : 0) + (o.paintB ? missB.length : 0);
+      box.append(h('div', 'rhead', n ? plural(n, 'valor', 'valores') + ' sin pareja en el otro rango' : 'Todos los valores están en ambos rangos.'));
+      box.append(h('div', 'dmeta', rangeLabel(A) + ' y ' + rangeLabel(B)));
+      if (o.paintA) box.append(cellGroup('Del rango 1 que faltan en el 2', A.sheet, missA, missA.length <= 40));
+      if (o.paintB) box.append(cellGroup('Del rango 2 que faltan en el 1', B.sheet, missB, missB.length <= 40));
+    }
+    box.append(h('div', 'rnote', 'El color se actualiza solo si cambias los datos. Para quitarlo usa el borrador.'));
+    toast(state.demo ? 'Vista previa: en Excel estas celdas quedarían en rojo.' : 'Diferencias marcadas en rojo.');
+  } catch (e) { cmpError(e); }
+  finally { setCmpBusy(false); }
+}
+
+async function runDup(){
+  const t = $('#rngD').value.trim();
+  if (!t){ toast('Indica el rango. Selecciónalo en Excel y pulsa Selección.', true); return; }
+  const o = cmpOpts();
+  setCmpBusy(true, 'Buscando…');
+  try {
+    const [G] = await state.api.resolveRanges([t]);
+    const groups = new Map();
+    G.values.forEach((r, i) => r.forEach((v, j) => {
+      const k = keyOf(v, o); if (k === '') return;
+      let g = groups.get(k); if (!g) groups.set(k, g = { v, cells: [] });
+      g.cells.push({ addr: addrOf(G, i, j), v });
+    }));
+    const dups = Array.from(groups.values()).filter(g => g.cells.length > 1).sort((a, b) => b.cells.length - a.cells.length);
+    const nCells = dups.reduce((s, g) => s + g.cells.length, 0);
+    await state.api.addRule(G, fDup(G, o), 'dup', GREEN);
+    const box = $('#cmpResult'); box.textContent = '';
+    box.append(h('div', 'rhead', dups.length ? plural(dups.length, 'valor repetido', 'valores repetidos') + ' en ' + plural(nCells, 'celda', 'celdas') : 'No hay valores duplicados en el rango.'));
+    box.append(h('div', 'dmeta', rangeLabel(G)));
+    dups.slice(0, 200).forEach(g => {
+      const d = h('details', 'dl'); const s = h('summary');
+      s.append(h('span', 'caret'), h('span', 'nm', dispVal(g.v)), h('span', 'cnt', plural(g.cells.length, 'vez', 'veces')));
+      d.append(s);
+      d.addEventListener('toggle', () => {
+        if (!d.open || d.children.length > 1) return;
+        const chips = h('div', 'chips');
+        g.cells.slice(0, 150).forEach(c => { const b = h('button', 'chip', c.addr); b.onclick = () => goCell(G.sheet, c.addr); chips.append(b); });
+        if (g.cells.length > 150) chips.append(h('span', 'more', 'y ' + fmt(g.cells.length - 150) + ' más'));
+        d.append(chips);
+      });
+      box.append(d);
+    });
+    if (dups.length > 200) box.append(h('div', 'rnote', 'Se muestran los primeros 200 valores.'));
+    box.append(h('div', 'rnote', 'El color se actualiza solo si cambias los datos. Para quitarlo usa el borrador.'));
+    toast(state.demo ? 'Vista previa: en Excel estas celdas quedarían en verde.' : 'Duplicados marcados en verde.');
+  } catch (e) { cmpError(e); }
+  finally { setCmpBusy(false); }
+}
+
+function clearMenu(btn){
+  menuBelow(btn, [
+    { label: 'Quitar colores de la hoja activa', action: () => clearColors('sheet') },
+    { label: 'Quitar colores de todo el libro', action: () => clearColors('book') }
+  ]);
+}
+async function clearColors(scope){
+  try {
+    const n = await state.api.clearRules(scope);
+    toast(n ? 'Se quitaron ' + plural(n, 'regla de color', 'reglas de color') + '.' : 'No había colores del panel ' + (scope === 'book' ? 'en el libro.' : 'en esta hoja.'));
+  } catch (e) { showError(e); }
+}
+
+function renderCmpStatus(){
+  const st = $('#cmpStatus'); st.textContent = '';
+  if (state.demo) st.append(h('span', 'demo', 'Vista previa con datos de ejemplo. '));
+  st.append(document.createTextNode('Rojo: no coinciden. Verde: repetidos.'));
+}
+
+function bindCmp(){
+  $('#tab-cmp').onclick = () => showPane('cmp');
+  $('input[name="cmpHow"][value="' + (prefs.how === 'any' ? 'any' : 'pos') + '"]').checked = true;
+  $('#pane-cmp').dataset.how = prefs.how === 'any' ? 'any' : 'pos';
+  $('#paintA').checked = !!prefs.paintA; $('#paintB').checked = !!prefs.paintB;
+  $('#optCase').checked = !!prefs.cs; $('#optTrim').checked = !!prefs.trim;
+  $('#cmpTol').value = prefs.tol || '0';
+  setCmpMode(prefs.cmpMode === 'dup' ? 'dup' : 'diff');
+  $$('#pane-cmp input').forEach(i => i.addEventListener('change', () => {
+    $('#pane-cmp').dataset.how = cmpOpts().how; saveCmpPrefs();
+  }));
+  ['rngA', 'rngB', 'rngD'].forEach(id => $('#' + id).addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); $('#cmpRun').click(); } }));
+  document.addEventListener('click', e => {
+    const pk = e.target.closest && e.target.closest('[data-pick]'); if (pk){ pickSelection(pk.dataset.pick); return; }
+    const md = e.target.closest && e.target.closest('[data-cmpmode]'); if (md) setCmpMode(md.dataset.cmpmode);
+  });
+}
+
+/* ---------- eventos de interfaz ---------- */
+function bindList(ul, opts){
+  const rowOf = t => t.closest && t.closest('.row');
+  ul.addEventListener('click', e => { const r = rowOf(e.target); if (r) opts.click(r.dataset.id); });
+  ul.addEventListener('dblclick', e => { const r = rowOf(e.target); if (r) opts.dbl(r.dataset.id); });
+  ul.addEventListener('contextmenu', e => {
+    const r = rowOf(e.target); if (!r) return; e.preventDefault();
+    const s = sheetById(r.dataset.id); if (s) openMenu(sheetMenuItems(s), e.clientX, e.clientY, ul);
+  });
+  ul.addEventListener('keydown', e => {
+    const rows = $$('.row', ul); if (!rows.length) return;
+    let i = rows.findIndex(r => r.dataset.id === opts.getKbd());
+    if (i < 0) i = rows.findIndex(r => r.classList.contains('active') || r.classList.contains('picked'));
+    const s = rows[i] ? sheetById(rows[i].dataset.id) : null;
+    switch (e.key){
+      case 'ArrowDown': i = Math.min(rows.length - 1, i + 1); break;
+      case 'ArrowUp': i = Math.max(0, i - 1); break;
+      case 'Home': i = 0; break;
+      case 'End': i = rows.length - 1; break;
+      case 'Enter': if (s){ e.preventDefault(); opts.enter(s.id); } return;
+      case 'F2': if (s && opts.f2){ e.preventDefault(); opts.f2(s.id); } return;
+      case 'ContextMenu': if (s){ e.preventDefault(); const rr = rows[i].getBoundingClientRect(); openMenu(sheetMenuItems(s), rr.left + 20, rr.bottom, ul); } return;
+      default: return;
+    }
+    e.preventDefault();
+    rows.forEach(r => r.classList.remove('kbd')); rows[i].classList.add('kbd'); rows[i].scrollIntoView({ block: 'nearest' });
+    opts.setKbd(rows[i].dataset.id);
+  });
+}
+
+function showPane(p){
+  state.pane = p;
+  ['sheets', 'deps', 'cmp'].forEach(x => {
+    $('#pane-' + x).hidden = x !== p;
+    $('#tab-' + x).setAttribute('aria-selected', String(x === p));
+  });
+  closeMenu();
+  if (p === 'deps'){ if (!sheetById(state.depSel)) state.depSel = state.activeId; renderDeps(); if (!state.analysis) analyze(); }
+  else if (p === 'cmp') renderCmpStatus();
+  else renderSheets();
+}
+
+function bindUi(){
+  $('#tab-sheets').onclick = () => showPane('sheets');
+  $('#tab-deps').onclick = () => showPane('deps');
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('[data-act]'); if (!b || b.disabled) return;
+    const a = b.dataset.act;
+    if (a === 'viewMenu') viewMenu(b);
+    else if (a === 'sheetMenu') sheetActionsMenu(b);
+    else if (a === 'sortAZ') setSort('az');
+    else if (a === 'sortZA') setSort('za');
+    else if (a === 'reload') reloadAll().then(() => toast('Lista actualizada.'));
+    else if (a === 'help') helpDialog();
+    else if (a === 'toggleHidden'){ prefs.showHidden = !prefs.showHidden; savePrefs(); renderAll(); }
+    else if (a === 'unhideAll') unhideAll();
+    else if (a === 'protectActive'){ if (state.activeId) toggleProtect(state.activeId); }
+    else if (a === 'addSheet') addSheet();
+    else if (a === 'analyze') analyze();
+    else if (a === 'clearMenu') clearMenu(b);
+    else if (a === 'cmpRun') { if (state.cmpMode === 'dup') runDup(); else runDiff(); }
+  });
+  const fOn = $('#filterOn'), fTx = $('#filterText');
+  fOn.addEventListener('change', () => { state.filterOn = fOn.checked; renderSheets(); });
+  fTx.addEventListener('input', () => { state.filterText = fTx.value; if (fTx.value && !fOn.checked){ fOn.checked = true; state.filterOn = true; } renderSheets(); });
+  fTx.addEventListener('keydown', e => { if (e.key === 'ArrowDown'){ e.preventDefault(); $('#sheetList').focus(); } else if (e.key === 'Enter'){ const first = $('#sheetList .row'); if (first) activateSheet(first.dataset.id); } });
+
+  bindList($('#sheetList'), {
+    click: id => { state.kbdId = id; activateSheet(id); },
+    dbl: id => startRename(id),
+    enter: id => activateSheet(id),
+    f2: id => startRename(id),
+    getKbd: () => state.kbdId, setKbd: id => { state.kbdId = id; }
+  });
+  bindList($('#depList'), {
+    click: id => { state.depSel = id; state.depKbdId = id; renderDeps(); },
+    dbl: id => activateSheet(id),
+    enter: id => activateSheet(id),
+    getKbd: () => state.depKbdId, setKbd: id => { state.depKbdId = id; state.depSel = id; renderDepDetail(); $$('#depList .row').forEach(r => r.classList.toggle('picked', r.dataset.id === id)); }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+  bindCmp();
+  window.addEventListener('resize', closeMenu);
+  window.addEventListener('blur', closeMenu);
+}
+
+/* ---------- arranque ---------- */
+let started = false;
+function start(api, demo){
+  if (started) return; started = true;
+  state.api = api; state.demo = demo;
+  document.body.classList.toggle('big', !!prefs.big);
+  bindUi();
+  renderSheets();
+  reloadAll()
+    .then(() => api.registerEvents({ activated: async a => onActivated(a), changed: async () => scheduleReload() }))
+    .catch(showError);
+}
+if (window.Office && Office.onReady){
+  Office.onReady(info => {
+    if (info && info.host === Office.HostType.Excel) start(ExcelApi, false);
+    else start(makeMockApi(), true);
+  });
+  setTimeout(() => { if (!started && typeof Excel === 'undefined') start(makeMockApi(), true); }, 5000);
+} else {
+  start(makeMockApi(), true);
+}
+</script>
+</body>
+</html>
